@@ -1,0 +1,26 @@
+version: 2
+updates:
+  # JavaScript: root + frontend via the pnpm workspace
+  - package-ecosystem: 'npm'
+    directories:
+      - '/'
+    schedule:
+      interval: 'weekly'
+    groups:
+      minor-and-patch:
+        update-types: ['minor', 'patch']
+
+  # Python backend (pyproject.toml + uv.lock) - uncomment in #2 backend scaffold
+  # - package-ecosystem: 'uv'
+  #   directory: '/backend'
+  #   schedule:
+  #     interval: 'weekly'
+  #   groups:
+  #     minor-and-patch:
+  #       update-types: ['minor', 'patch']
+
+  # Versions of actions used in .github/workflows/*.yml -- uncomment in #39 CI
+  # - package-ecosystem: 'github-actions'
+  #   directory: '/'
+  #   schedule:
+  #     interval: 'weekly'
