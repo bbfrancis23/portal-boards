@@ -1,7 +1,7 @@
 {
   "name": "portal-boards",
   "private": true,
-  "packageManager": "pnpm@11.15.0",
+  "packageManager": "pnpm@12.8.1",
   "scripts": {
     "dev": "concurrently -k -n api,web -c blue,green \"uv run --directory backend fastapi dev app/main.py\" \"pnpm --dir frontend dev\""
   },
