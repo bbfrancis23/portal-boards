@@ -1,0 +1,34 @@
+[project]
+name = "portal-boards-backend"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.142.2",
+    "pydantic-settings>=2.15.0",
+    "sqlmodel>=0.0.47",
+]
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.13.1",
+    "pytest>=9.1.1",
+    "ruff>=0.16.10",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes: unused imports, undefined names
+    "I",   # isort: import sorting
+    "UP",  # pyupgrade: modern Python syntax
+    "B",   # flake8-bugbear: likely bugs
+    "SIM", # flake8-simplify: simpler equivalents
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
