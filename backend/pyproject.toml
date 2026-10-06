@@ -3,6 +3,7 @@ name = "portal-boards-backend"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "alembic>=1.20.0",
     "fastapi[standard]>=0.142.2",
     "pydantic-settings>=2.15.0",
     "sqlalchemy-libsql>=0.2.0 ; sys_platform != 'win32'",
