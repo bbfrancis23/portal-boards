@@ -9,7 +9,8 @@ from sqlmodel import Session, create_engine
 from app.config import get_settings
 
 
-def _create_engine() -> Engine:
+def create_db_engine() -> Engine:
+    """Create an engine for DATABASE_URL, without foreign-key enforcement (used by migrations)."""
     settings = get_settings()
     url = settings.database_url
     connect_args: dict[str, Any] = {}
@@ -20,7 +21,7 @@ def _create_engine() -> Engine:
     return create_engine(url, connect_args=connect_args)
 
 
-engine = _create_engine()
+engine = create_db_engine()
 
 
 @event.listens_for(engine, "connect")
