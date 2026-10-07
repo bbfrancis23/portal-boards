@@ -14,8 +14,18 @@ concurrency:
 
 jobs:
   backend:
-    name: Backend (SQLite)
+    name: Backend (${{ matrix.database }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - database: sqlite
+            database_url: sqlite:///./ci.db
+          - database: libsql
+            database_url: sqlite+libsql:///./ci.db
+    env:
+      DATABASE_URL: ${{ matrix.database_url }}
     defaults:
       run:
         working-directory: backend
@@ -30,9 +40,11 @@ jobs:
         run: uv sync --locked
 
       - name: Lint
+        if: matrix.database == 'sqlite'
         run: uv run ruff check .
 
       - name: Check formatting
+        if: matrix.database == 'sqlite'
         run: uv run ruff format --check .
 
       - name: Apply migrations
@@ -43,7 +55,6 @@ jobs:
 
       - name: Run tests
         run: uv run pytest
-
   frontend:
     name: Frontend
     runs-on: ubuntu-latest
