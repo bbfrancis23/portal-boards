@@ -20,7 +20,7 @@ updates:
         update-types: ['minor', 'patch']
 
   # Versions of actions used in .github/workflows/*.yml -- uncomment in #39 CI
-  # - package-ecosystem: 'github-actions'
-  #   directory: '/'
-  #   schedule:
-  #     interval: 'weekly'
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
