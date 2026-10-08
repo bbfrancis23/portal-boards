@@ -58,6 +58,7 @@ class Board(SQLModel, table=True):
     portal_id: int = Field(foreign_key="portals.id", ondelete="CASCADE", index=True)
     label: str
     position: int = 0
+    persona_id: str | None = None
     created_at: datetime = Field(default_factory=utcnow)
 
 
