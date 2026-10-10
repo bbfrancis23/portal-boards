@@ -7,7 +7,7 @@ dependencies = [
     "fastapi[standard]>=0.142.2",
     "pydantic-settings>=2.15.0",
     "sqlalchemy-libsql>=0.2.0 ; sys_platform != 'win32'",
-    "sqlmodel>=0.0.47",
+    "sqlmodel>=0.0.48",
 ]
 
 [dependency-groups]
