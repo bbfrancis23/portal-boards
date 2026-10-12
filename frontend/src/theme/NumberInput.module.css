@@ -1,0 +1,16 @@
+/* Pill-friendly NumberInput chevrons: closer together, inside the curve, no divider line. */
+.controls {
+  height: calc(var(--input-height) * 0.6);
+  margin-inline-end: calc(0.4rem * var(--mantine-scale));
+}
+
+.control {
+  height: 50%;
+  border-inline-start: 0;
+  color: var(--pb-text-dim);
+}
+
+.control:hover {
+  background-color: transparent;
+  color: var(--pb-cyan-line);
+}

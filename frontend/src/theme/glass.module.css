@@ -1,0 +1,45 @@
+.glassPanel,
+.glassCard {
+  position: relative;
+  border-radius: var(--mantine-radius-lg);
+  padding: var(--mantine-spacing-lg);
+}
+
+/* Header, side panels, modals: blurs what's behind it. */
+.glassPanel {
+  background: var(--pb-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Widget cards: no blur, so dragging stays smooth. */
+.glassCard {
+  background: var(--pb-surface);
+}
+
+/* 1px gradient "chrome" outline that follows the rounded corners. */
+.glassPanel::before,
+.glassCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: var(--pb-chrome);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+}
+
+/* No blur support: make glass more opaque so text stays readable. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glassPanel {
+    background: var(--pb-surface);
+  }
+}

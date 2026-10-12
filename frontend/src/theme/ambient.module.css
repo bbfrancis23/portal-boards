@@ -1,0 +1,19 @@
+.ambient {
+  --blob-cyan: rgba(0, 229, 255, 0.28);
+  --blob-lime: rgba(184, 255, 60, 0.26);
+  --blob-lilac: rgba(167, 123, 255, 0.24);
+
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 20% 30%, var(--blob-cyan), transparent 45%),
+    radial-gradient(circle at 75% 25%, var(--blob-lilac), transparent 45%),
+    radial-gradient(circle at 55% 80%, var(--blob-lime), transparent 50%), var(--pb-bg);
+}
+
+/* Nite: deep neon tints at low opacity. */
+:global(:root[data-mantine-color-scheme="dark"]) .ambient {
+  --blob-cyan: rgba(34, 238, 255, 0.16);
+  --blob-lime: rgba(198, 255, 90, 0.1);
+  --blob-lilac: rgba(167, 123, 255, 0.18);
+}
