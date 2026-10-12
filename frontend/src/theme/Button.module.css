@@ -1,0 +1,21 @@
+/* Custom "glow" variant (LOOK.md): transparent with a thin outline, a cyan halo on hover. */
+.root[data-variant="glow"] {
+  background-color: transparent;
+  color: var(--pb-text);
+  border: 1px solid var(--pb-silver);
+  transition:
+    box-shadow 150ms ease,
+    border-color 150ms ease;
+}
+
+.root[data-variant="glow"]:hover {
+  background-color: transparent;
+  border-color: var(--pb-cyan-line);
+  box-shadow: var(--pb-glow-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root[data-variant="glow"] {
+    transition: none;
+  }
+}
