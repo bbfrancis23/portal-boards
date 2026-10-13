@@ -1,0 +1,23 @@
+/* Neon-tube text (LOOK.md), for the logo and big metric numbers only:
+   hollow letters with a cyan outline and a glow. */
+.neon {
+  color: transparent;
+  -webkit-text-stroke: 1.25px var(--pb-cyan-line);
+  text-shadow:
+    0 0 4px rgba(0, 229, 255, 0.25),
+    0 0 14px rgba(0, 229, 255, 0.15);
+}
+
+/* Nite: full neon glow. */
+:global(:root[data-mantine-color-scheme="dark"]) .neon {
+  text-shadow:
+    0 0 6px rgba(34, 238, 255, 0.7),
+    0 0 18px rgba(34, 238, 255, 0.45);
+}
+
+/* Can't draw outlined text: show solid cyan instead, so it's never invisible. */
+@supports not (-webkit-text-stroke: 1px black) {
+  .neon {
+    color: var(--pb-cyan-line);
+  }
+}

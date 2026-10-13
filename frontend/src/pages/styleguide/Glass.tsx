@@ -1,7 +1,7 @@
 import {SimpleGrid, Text, Title} from "@mantine/core"
 
-import AmbientBackground from "../../theme/AmbientBackground"
-import glass from "../../theme/glass.module.css"
+import AmbientBackground from "@/theme/AmbientBackground"
+import glass from "@/theme/glass.module.css"
 
 const Glass = () => {
   return (
