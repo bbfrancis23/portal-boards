@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from sqlmodel import select
+from sqlalchemy import select
 
 from app.db import SessionDep
 
@@ -8,5 +8,5 @@ app = FastAPI(title="portal-boards")
 
 @app.get("/api/health")
 def health(session: SessionDep) -> dict[str, str]:
-    session.exec(select(1)).one()
+    session.execute(select(1)).scalar_one()
     return {"status": "ok", "database": "ok"}

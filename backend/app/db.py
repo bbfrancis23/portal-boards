@@ -2,9 +2,9 @@ from collections.abc import Iterator
 from typing import Annotated, Any
 
 from fastapi import Depends
-from sqlalchemy import event
+from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
-from sqlmodel import Session, create_engine
+from sqlalchemy.orm import Session
 
 from app.config import get_settings
 

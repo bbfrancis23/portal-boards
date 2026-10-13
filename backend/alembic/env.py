@@ -3,15 +3,15 @@ from logging.config import fileConfig
 from alembic import context
 from app.config import get_settings
 from app.db import create_db_engine
-from app.models import SQLModel
+from app.models import Base
 
 config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Importing from app.models registers every table on SQLModel.metadata.
-target_metadata = SQLModel.metadata
+# Importing from app.models registers every table on Base.metadata.
+target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
