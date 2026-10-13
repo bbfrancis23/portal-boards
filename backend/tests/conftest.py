@@ -1,9 +1,9 @@
 import pytest
-from sqlalchemy import event
+from sqlalchemy import create_engine, event
+from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
-from sqlmodel import Session, SQLModel, create_engine
 
-from app.models import User
+from app.models import Base, User
 
 
 @pytest.fixture
@@ -19,7 +19,7 @@ def session():
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
 
-    SQLModel.metadata.create_all(engine)
+    Base.metadata.create_all(engine)
     with Session(engine) as session:
         yield session
     engine.dispose()

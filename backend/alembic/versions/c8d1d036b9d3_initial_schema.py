@@ -9,7 +9,6 @@ Create Date: 2026-10-06 15:21:29.936453
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-import sqlmodel
 
 from alembic import op
 
@@ -26,12 +25,12 @@ def upgrade() -> None:
     op.create_table(
         "users",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("email", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column("display_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("avatar_url", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+        sa.Column("email", sa.String(), nullable=True),
+        sa.Column("display_name", sa.String(), nullable=False),
+        sa.Column("avatar_url", sa.String(), nullable=True),
         sa.Column("is_guest", sa.Boolean(), nullable=False),
-        sa.Column("expires_at", sqlmodel.sql.sqltypes.UTCDateTime(), nullable=True),
-        sa.Column("created_at", sqlmodel.sql.sqltypes.UTCDateTime(), nullable=False),
+        sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_users")),
         sa.UniqueConstraint("email", name=op.f("uq_users_email")),
     )
@@ -39,9 +38,9 @@ def upgrade() -> None:
         "oauth_accounts",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
-        sa.Column("provider", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("provider_account_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("created_at", sqlmodel.sql.sqltypes.UTCDateTime(), nullable=False),
+        sa.Column("provider", sa.String(), nullable=False),
+        sa.Column("provider_account_id", sa.String(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(
             ["user_id"],
             ["users.id"],
@@ -62,9 +61,9 @@ def upgrade() -> None:
         "portals",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("owner_id", sa.Integer(), nullable=False),
-        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("template", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column("created_at", sqlmodel.sql.sqltypes.UTCDateTime(), nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("template", sa.String(), nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(
             ["owner_id"], ["users.id"], name=op.f("fk_portals_owner_id_users"), ondelete="CASCADE"
         ),
@@ -77,9 +76,9 @@ def upgrade() -> None:
         "boards",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("portal_id", sa.Integer(), nullable=False),
-        sa.Column("label", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("label", sa.String(), nullable=False),
         sa.Column("position", sa.Integer(), nullable=False),
-        sa.Column("created_at", sqlmodel.sql.sqltypes.UTCDateTime(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(
             ["portal_id"],
             ["portals.id"],
@@ -95,7 +94,7 @@ def upgrade() -> None:
         "conversations",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("board_id", sa.Integer(), nullable=False),
-        sa.Column("created_at", sqlmodel.sql.sqltypes.UTCDateTime(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(
             ["board_id"],
             ["boards.id"],
@@ -111,13 +110,13 @@ def upgrade() -> None:
         "widget_instances",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("board_id", sa.Integer(), nullable=False),
-        sa.Column("type", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("type", sa.String(), nullable=False),
         sa.Column("x", sa.Integer(), nullable=False),
         sa.Column("y", sa.Integer(), nullable=False),
         sa.Column("w", sa.Integer(), nullable=False),
         sa.Column("h", sa.Integer(), nullable=False),
         sa.Column("config", sa.JSON(), nullable=False),
-        sa.Column("created_at", sqlmodel.sql.sqltypes.UTCDateTime(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(
             ["board_id"],
             ["boards.id"],
@@ -135,9 +134,9 @@ def upgrade() -> None:
         "messages",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("conversation_id", sa.Integer(), nullable=False),
-        sa.Column("role", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("role", sa.String(), nullable=False),
         sa.Column("content", sa.JSON(), nullable=False),
-        sa.Column("created_at", sqlmodel.sql.sqltypes.UTCDateTime(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(
             ["conversation_id"],
             ["conversations.id"],
@@ -156,7 +155,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("widget_instance_id", sa.Integer(), nullable=False),
         sa.Column("data", sa.JSON(), nullable=False),
-        sa.Column("created_at", sqlmodel.sql.sqltypes.UTCDateTime(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(
             ["widget_instance_id"],
             ["widget_instances.id"],

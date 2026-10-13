@@ -1,7 +1,7 @@
 import copy
 from datetime import date
 
-from sqlmodel import Session
+from sqlalchemy.orm import Session
 
 from app.models import Board, Portal, WidgetData, WidgetInstance
 from app.templates import get_template
@@ -23,7 +23,7 @@ def create_portal(
         if template is None:
             raise ValueError(f"Unknown template: {template_id}")
 
-    portal = Portal(owner_id=owner_id, name=name, template=template_id)
+    portal = Portal(owner_id=owner_id, name=name, template_id=template_id)
     session.add(portal)
     session.flush()
 
