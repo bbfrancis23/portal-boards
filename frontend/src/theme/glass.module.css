@@ -1,25 +1,20 @@
-.glassPanel,
-.glassCard {
-  position: relative;
-  border-radius: var(--mantine-radius-lg);
-  padding: var(--mantine-spacing-lg);
-}
-
-/* Header, side panels, modals: blurs what's behind it. */
-.glassPanel {
+/* The glass look only: translucent, blurred, with a chrome outline. It doesn't change layout,
+   so it's safe on floating dropdowns (Menu, Popover, Tooltip), which Mantine positions itself. */
+.glass {
   background: var(--pb-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
 
-/* Widget cards: no blur, so dragging stays smooth. */
-.glassCard {
+/* Solid-ish surface for widget cards: no blur, so dragging stays smooth. */
+.surface {
   background: var(--pb-surface);
 }
 
-/* 1px gradient "chrome" outline that follows the rounded corners. */
-.glassPanel::before,
-.glassCard::before {
+/* 1px gradient "chrome" outline that follows the rounded corners.
+   Needs a positioned element (floating dropdowns already are; panels use `.positioned`). */
+.glass::before,
+.surface::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -37,9 +32,31 @@
   pointer-events: none;
 }
 
+.positioned {
+  position: relative;
+}
+
+/* Readable text on glass (e.g. tooltips, whose text is white by default). */
+.onGlass {
+  color: var(--pb-text);
+}
+
+/* Panels on the page: the look plus layout. */
+.glassPanel {
+  composes: glass positioned;
+  border-radius: var(--mantine-radius-lg);
+  padding: var(--mantine-spacing-lg);
+}
+
+.glassCard {
+  composes: surface positioned;
+  border-radius: var(--mantine-radius-lg);
+  padding: var(--mantine-spacing-lg);
+}
+
 /* No blur support: make glass more opaque so text stays readable. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glassPanel {
+  .glass {
     background: var(--pb-surface);
   }
 }

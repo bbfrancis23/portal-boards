@@ -1,0 +1,9 @@
+/* The entries sit close together, so draw the focus ring inside each one
+   instead of outside, where it would overlap its neighbors. */
+.control + .control {
+  margin-top: calc(0.25rem * var(--mantine-scale));
+}
+
+.control:focus-visible {
+  outline-offset: -2px;
+}

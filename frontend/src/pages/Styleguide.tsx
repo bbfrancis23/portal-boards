@@ -14,6 +14,8 @@ import TypeScale from "./styleguide/TypeScale"
 import Controls from "./styleguide/Controls"
 import ColorScales from "./styleguide/ColorScales"
 import Glass from "./styleguide/Glass"
+import Shadows from "./styleguide/Shadows"
+import Overlays from "./styleguide/Overlays"
 
 const Styleguide = () => {
   const {colorScheme, setColorScheme} = useMantineColorScheme()
@@ -39,6 +41,12 @@ const Styleguide = () => {
             </Section>
             <Section label="Glass">
               <Glass />
+            </Section>
+            <Section label="Shadows">
+              <Shadows />
+            </Section>
+            <Section label="Overlays">
+              <Overlays />
             </Section>
           </Stack>
         </Grid.Col>

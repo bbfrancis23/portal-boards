@@ -1,6 +1,5 @@
 import {Box, SimpleGrid, Text, useMantineTheme} from "@mantine/core"
-
-import type {Token} from "../../theme/theme"
+import type {Token} from "@/theme/colors"
 
 const Swatches = () => {
   const theme = useMantineTheme()
