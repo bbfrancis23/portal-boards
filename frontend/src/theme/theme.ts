@@ -18,12 +18,14 @@ import {
   Drawer,
   Menu,
   Popover,
+  Card,
 } from "@mantine/core"
 
 import buttonClasses from "./Button.module.css"
 import numberInputClasses from "./NumberInput.module.css"
 import tableOfContentsClasses from "./TableOfContents.module.css"
 import glassClasses from "./glass.module.css"
+import "./motion.css"
 import {
   amber,
   colorTokens,
@@ -96,6 +98,8 @@ export const theme = createTheme({
   primaryColor: "cyan",
   primaryShade: PRIMARY_SHADE,
   autoContrast: true,
+  // Mantine's own transitions (modals, menus) respect the OS reduced-motion setting.
+  respectReducedMotion: true,
 
   radius: {xs: rem(8), sm: rem(12), md: rem(16), lg: rem(24), xl: rem(32)},
   defaultRadius: "lg",
@@ -126,6 +130,13 @@ export const theme = createTheme({
       vars: (_theme, props) => {
         return {root: filledVars("button", props.color, props.variant)}
       },
+    }),
+    // The surface look and chrome outline only: Mantine keeps control of padding and radius
+    // (so the `padding` / `radius` props and Card.Section still work). Mantine's Card is
+    // already position: relative, which the chrome outline needs.
+    Card: Card.extend({
+      defaultProps: {padding: "lg"},
+      classNames: {root: glassClasses.surface},
     }),
     Chip: Chip.extend({defaultProps: {radius: "xl"}}),
     NumberInput: NumberInput.extend({

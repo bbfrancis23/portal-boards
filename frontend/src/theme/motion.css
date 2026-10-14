@@ -1,0 +1,25 @@
+/* Motion tokens (LOOK.md). Our own CSS uses these for transitions, so reduced motion
+   only has to change them in one place. Mantine's components handle reduced motion
+   themselves (`respectReducedMotion` in the theme), so they aren't overridden here. */
+:root {
+  --pb-ease: cubic-bezier(0.22, 0.8, 0.24, 1);
+  --pb-dur-fast: 150ms;
+  --pb-dur: 300ms;
+  --pb-dur-slow: 450ms;
+}
+
+/* Reduced motion: when the operating system asks for it, or when the styleguide's
+   "Reduce motion" switch sets data-reduced-motion on <html>. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --pb-dur-fast: 1ms;
+    --pb-dur: 1ms;
+    --pb-dur-slow: 1ms;
+  }
+}
+
+:root[data-reduced-motion] {
+  --pb-dur-fast: 1ms;
+  --pb-dur: 1ms;
+  --pb-dur-slow: 1ms;
+}
