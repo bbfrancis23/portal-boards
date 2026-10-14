@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import Board, Portal, User, WidgetData, WidgetInstance
-from app.services.portals import create_portal
+from app.services.portals_service import create_portal
 from app.templates import TEMPLATES
 from app.templates.types import Template
 from app.templates.wellness_studio import generate_sample_data
