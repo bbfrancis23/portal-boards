@@ -1,8 +1,14 @@
+from collections.abc import Iterator
+
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
+from app.auth import get_current_user
+from app.db import get_session
+from app.main import app
 from app.models import Base, User
 
 
@@ -33,3 +39,28 @@ def user(session: Session) -> User:
     session.commit()
     session.refresh(user)
     return user
+
+
+@pytest.fixture
+def client(session: Session) -> Iterator[TestClient]:
+    """An API client whose routes use the test database instead of the real one."""
+    app.dependency_overrides[get_session] = lambda: session
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def dev_user(session: Session) -> User:
+    """The user the API acts as (the temporary dev user, until real login in M3)."""
+    return get_current_user(session)
+
+
+@pytest.fixture
+def other_user(session: Session) -> User:
+    """Someone else, whose portals and boards the dev user must never see or change."""
+    other = User(email="other@example.com", display_name="Other")
+    session.add(other)
+    session.commit()
+    session.refresh(other)
+    return other
