@@ -160,3 +160,26 @@ Each reuses the existing widget types.
 
 Restaurants, salons, gyms, medical and dental offices, retail shops. Same problem as wellness
 studios: the owner would have to enter everything twice.
+
+## 3. Unique portal themes (later)
+
+Each portal could have its own look, not just Clean Future: for example a warmer, softer theme
+for a spa, or a plainer one for a landlord. This is feasible because the whole look already comes
+from the theme (decided in #43/#44): components only refer to names (`var(--pb-surface)`,
+`color="cyan"`, `<Card>`), never to hard-coded colors.
+
+**How it would work**
+
+1. Several themes, each a `createTheme(...)` plus its own token values (light and dark), next to
+   today's Clean Future theme in `frontend/src/theme/`.
+2. Each portal names its theme: from its template, or a new `Portal.theme_id` column (a small
+   migration) so owners could pick one.
+3. The app passes the current portal's theme and `cssVariablesResolver` to `MantineProvider`.
+
+**The rule to keep:** every theme defines the **same token names** (`--pb-bg`, `--pb-surface`,
+`--pb-glass`, `--pb-cyan`, …). That set is the contract components rely on; themes change the
+values, never drop names.
+
+**Small catches:** fonts load per theme; a few shared CSS details (the `glow` button variant, the
+glass blur, neon text) may want per-theme versions for a very different look; the contrast test
+(`theme/contrast.test.ts`) should run against every theme.
