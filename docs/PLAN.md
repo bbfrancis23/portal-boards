@@ -5,9 +5,9 @@
 
 `C:\Users\18018\Desktop\portal-boards` is empty. Target: a new **public** repo `bbfrancis23/portal-boards` (gh CLI authenticated), with a Vite + React SPA, a FastAPI backend, Turso in production on Vercel, GitHub + Google login, and Claude features: a streaming assistant, board summary/advice, and an agent that edits boards via tool use.
 
-**Visual design** follows the **"Clean Future"** look plan ([LOOK.md](LOOK.md)). Milestones 1–7 use a plain Mantine shell; milestone 8 applies the look. Compass's earthy theme, parchment shell and landing page are **not** reused.
+**Visual design** follows the **"Clean Future"** look plan ([LOOK.md](LOOK.md)). The Mantine theme, tokens and fonts were built early, in #43 and #44, so the styleguide runs on the real theme; milestone 8 applies the look to the real screens (app shell, widgets, motion). Compass's earthy theme, parchment shell and landing page are **not** reused.
 
-**Product direction (updated in #57, before the first migration):** users own **portals**, and a portal is a collection of boards. A **template** is a bundle for one business type (boards, widgets, layouts, sample data and an AI persona), defined in code and **copied** into a new portal; from then on the portal is the user's own and every change is saved. The first and only template is a **wellness studio**. compass's financial and fitness boards are not carried over, but its widget engine is. Anyone can try a fully working wellness studio portal **without signing in**. See [Templates, personas and demo](#templates-personas-and-demo).
+**Product direction (updated in #57, before the first migration):** users own **portals**, and a portal is a collection of boards. A **template** is a bundle for one business type (boards, widgets, layouts, sample data and AI personas), defined in code and **copied** into a new portal; from then on the portal is the user's own and every change is saved. The first and only template is a **wellness studio**. compass's financial and fitness boards are not carried over, but its widget engine is. Anyone can try a fully working wellness studio portal **without signing in**. See [Templates, personas and demo](#templates-personas-and-demo).
 
 ## Stack
 | Layer | Choice |
@@ -16,7 +16,7 @@
 | UI | **Mantine 9.5** (`@mantine/core`, `form`, `hooks`, `notifications`, `modals`), `@tabler/icons-react`, `postcss-preset-mantine` (reuse compass `postcss.config.mjs`) |
 | Charts / grid | `@mantine/charts` + `recharts` 3; **react-grid-layout v2** (`ResponsiveGridLayout`, `useContainerWidth`, `dragConfig`) + `react-resizable` (same versions as compass) |
 | API client | `openapi-typescript` + `openapi-fetch` generated from FastAPI `/openapi.json` |
-| Backend | Python 3.12, FastAPI, SQLModel (sync), Alembic, `sqlalchemy-libsql` (prod/Linux only), Authlib + PyJWT + `itsdangerous`, `slowapi` |
+| Backend | Python 3.12, FastAPI, SQLAlchemy 2.0 typed models (sync; switched from SQLModel in #74), Pydantic `BaseModel` API schemas, Alembic, `sqlalchemy-libsql` (prod/Linux only), Authlib + PyJWT + `itsdangerous`, `slowapi` |
 | Database | Local/tests: SQLite file via stdlib driver (works on Windows). Prod: **Turso** via `sqlite+libsql://…?secure=true` + auth token |
 | AI | `anthropic` SDK, `AsyncAnthropic`, `claude-sonnet-5-5` (configurable `CLAUDE_MODEL`), adaptive thinking, SSE |
 | Hosting | Vercel: Vite build plus FastAPI as a Python Function under `/api/*` (same origin) |
@@ -37,7 +37,7 @@
 - `app/layout.tsx` provider setup → `main.tsx`; `app/register-widgets.tsx` → plain imports in `main.tsx`
 
 **Rewrite in Python → `backend/app/`**
-- `db/schema.ts` (Drizzle) → SQLModel models
+- `db/schema.ts` (Drizzle) → SQLAlchemy 2.0 models (`app/models.py`)
 - `lib/board-queries.ts`, `widget-queries.ts`, `widget-data-queries.ts`, `widget-actions.ts`, `widget-data-actions.ts`, `advice-actions.ts` → services + FastAPI routers
 - `lib/demo-seed.ts` + `db/seed.ts` → `app/templates/` (the wellness studio template and its sample-data generator; compass's seeding approach is the reference, its financial/fitness data is not reused)
 - `boards/*.board.ts` `buildAdvicePrompt` → per-template persona prompts in `app/ai/personas.py`
@@ -54,8 +54,8 @@ User ──< Portal ──< Board ──< WidgetInstance ──< WidgetData
 ```
 - **User**: id, email (unique, **nullable** for guests), display_name, avatar_url, **is_guest**, **expires_at** (guests only), created_at *(new; compass had none and keyed boards by GitHub id)*
 - **OAuthAccount**: user_id, provider (`github`|`google`), provider_account_id; unique (provider, provider_account_id)
-- **Portal** *(new)*: id, owner_id → User, name, **template** (`wellness-studio`|null), created_at. No uniqueness on template: a user may create several portals from the same template.
-- **Board**: id, **portal_id** → Portal, label, **position** (order within the portal), created_at. Replaces compass's per-user `domain` boards; boards are addressed by **id**.
+- **Portal** *(new)*: id, owner_id → User, name, **template_id** (`wellness-studio`|null; renamed from `template` in #74), created_at. No uniqueness on template: a user may create several portals from the same template.
+- **Board**: id, **portal_id** → Portal, label, **position** (order within the portal), **persona_id** (the board's AI persona; null = the portal template's default), created_at. Replaces compass's per-user `domain` boards; boards are addressed by **id**.
 - **WidgetInstance**: id, board_id, type, x, y, w, h, config (JSON), created_at (same as compass; layout stored per widget, so a user's rearrangement is saved)
 - **WidgetData**: id, widget_instance_id, data (JSON row), created_at (same as compass)
 - **Conversation / Message**: per-board chat history; full `response.content` blocks as JSON, replayed append-only *(new)*
@@ -63,8 +63,9 @@ User ──< Portal ──< Board ──< WidgetInstance ──< WidgetData
 All foreign keys use `ON DELETE CASCADE` (SQLite `foreign_keys=ON`), so deleting a user, portal, board or widget removes everything beneath it. Constraint names follow a SQLAlchemy naming convention so later SQLite batch migrations can address them.
 
 **Widget types (registry-based)**
-- **chart**: generalize compass's `line-chart-widget`: `config.chartType` `line|bar|area|pie`, keeping compass's `{title, dataKey, series[], sourceWidgetId?}`. Reads rows from `sourceWidgetId` (an input widget) or its own `WidgetData`.
-- **stat**: a single value with optional delta and sparkline, from a source widget's rows (renamed from "metric").
+**Live queries (decided in #6):** only **input** widgets (`table`, `schedule`) hold `WidgetData` rows. **Output** widgets (`chart`, `stat`) hold no rows: their config has a `source` query over an input widget, evaluated client-side when rendered, so new rows update every chart and stat through the data bus. The query vocabulary: `widget` (the source widget), `aggregate` (`count`|`sum`|`avg`), `field`, `groupBy`, `seriesBy`, `dateField`, `bucket` (`week`|`month`), `period` (`this_week`|`this_month`|`last_8_weeks`|`last_6_months`), `where` (`{field: value}`). In a template, `source.widget` is a template-local widget key, resolved to the real widget id when the portal is created.
+- **chart**: generalizes compass's `line-chart-widget`: `{title, chartType: line|bar|area|pie, stacked?, source}`.
+- **stat**: a single value with an optional delta (`compare: previous_period`) and sparkline: `{title, format, compare?, source}` (renamed from "metric").
 - **table**: `data-table` input widget (generic rows, CSV paste).
 - **schedule** *(new)*: a week view of classes and appointments: days as columns, time slots as rows, entries as blocks. Rows live in its own `WidgetData` (`{title, start, end, kind, ...}`).
 - **form**: compass's `form-widget` and **advice** stay available.
@@ -76,7 +77,7 @@ Every query is scoped to the current user through `Portal.owner_id` (compass's "
 | Route | Replaces compass |
 |---|---|
 | `GET /templates` → available templates (id, name, description, persona name/avatar) | new |
-| `GET /portals`, `POST /portals` `{name, template?}` (copies the template's boards, widgets and sample data), `PATCH/DELETE /portals/{id}` | `getBoardWidgets` auto-provision |
+| `GET /portals`, `POST /portals` `{name, template_id?}` (copies the template's boards, widgets and sample data), `PATCH/DELETE /portals/{id}` | `getBoardWidgets` auto-provision |
 | `GET /portals/{id}/boards`, `POST /portals/{id}/boards`, `PATCH/DELETE /boards/{id}` | new (compass had fixed domain boards) |
 | `POST /demo` → creates a guest user and a wellness studio portal, sets the session cookie | new |
 | `GET /boards/{id}/widgets` | `getBoardWidgets` |
@@ -97,31 +98,29 @@ Every query is scoped to the current user through `Portal.owner_id` (compass's "
 ## Claude integration (`backend/app/ai`)
 Shared: `AsyncAnthropic()`, `model=settings.CLAUDE_MODEL` (default `claude-sonnet-5-5`), `thinking={"type":"adaptive"}`, explicit `output_config.effort` per feature. Sonnet 5.5 rules: no `thinking: disabled`, no forced `tool_choice`, no prefill. Server-side refusal fallback (`server-side-fallback-2026-07-01`, `fallbacks="default"`; Python form verified at implementation); check `stop_reason`. Typed SDK errors → HTTP errors. `cache_control` on the stable system prompt + tools. `ADVICE_ENABLED`-style flag → `AI_ENABLED` env setting.
 
-**Personas:** each portal's assistant is a persona supplied by its template (`app/ai/personas.py`): a **name**, an **avatar** (frontend asset keyed by persona id), a **personality** (tone of voice) and **expertise** (domain knowledge in the system prompt, plus the set of agent tools it may use, and its effort level). One shared agent loop loads the persona of the board's portal; portals without a template get a general-purpose persona. Each persona's system prompt is kept stable so it is prompt-cached. Users can't edit personas yet (a later column + migration could allow a custom name or instructions).
-1. **Advice / summary** (port of compass `getBoardAdvice`): gather all widget data → the portal persona's advice prompt (replaces the ported `buildAdvicePrompt`) → stream to the existing advice widget. Effort `low`.
+**Personas (per board, decided in #6):** each **board's** assistant is a persona (`app/ai/personas.py`); templates assign one per board, plus a default for the portal (stored as `Board.persona_id`, null = the default). A persona has a **name**, an **avatar** (frontend asset keyed by persona id), a **personality** (tone of voice) and **expertise** (domain knowledge in the system prompt, plus the set of agent tools it may use, and its effort level). One shared agent loop loads the **current board's** persona; boards in portals without a template get a general-purpose persona. Each persona's system prompt is kept stable so it is prompt-cached. Users can't edit personas yet (a later column + migration could allow a custom name or instructions).
+1. **Advice / summary** (port of compass `getBoardAdvice`): gather all widget data → the board persona's advice prompt (replaces the ported `buildAdvicePrompt`) → stream to the existing advice widget. Effort `low`.
 2. **Assistant chat**: streaming Q&A about the board's data. Effort `low`.
 3. **Board agent**: `client.beta.messages.tool_runner(stream=True)` with `@beta_async_tool(eager_input_streaming=True)` tools `list_widgets`, `get_widget_data`, `add_widget(type, config, x?, y?, w?, h?)`, `update_widget`, `remove_widget`, `move_widget`, `add_data_rows` (filtered to the persona's allowed tools). Effort from the persona (default `medium`), `tool_choice` auto. Per-request closures scope to user/board; Pydantic validation; mutations recorded for **Undo**; capped iterations (within Vercel function limits); SSE `text` / `tool_call` / `board_updated` events → the frontend invalidates queries and the data bus refreshes charts.
 
 ## Frontend (neutral shell until the look plan)
-- `main.tsx`: `MantineProvider` (default theme placeholder), `Notifications`, `ModalsProvider`, QueryClient, router, widget registration imports.
+- `main.tsx`: `MantineProvider` with the Clean Future theme and `cssVariablesResolver` from `theme/theme.ts`, `Notifications`, `ModalsProvider`, QueryClient, router, widget registration imports.
 - Routes: `/` (landing with **Try the demo** and sign in), `/signin`, `/demo` (calls `POST /api/demo`, then opens the guest portal), `/portals` (list + "New portal": blank or from a template), `/portals/:portalId` (redirects to its first board), `/portals/:portalId/boards/:boardId` (canvas + assistant panel).
 - Portal shell: board list for the current portal as navigation (create, rename, reorder, delete boards), portal switcher, guest banner during the demo ("Demo: expires in N hours, sign in to keep it").
 - Board page: ported `DashboardCanvas` (RGL v2, `dragConfig.handle=".widget-drag-handle"`, debounced layout save) + `WidgetShell` (+ remove and edit actions now wired) + "Add widget" modal (pick a registered type, configure).
-- Assistant panel: the portal persona's name and avatar, chat, "Agent mode" switch, streaming render, tool-call badges, "Applied N changes — Undo" notification.
+- Assistant panel: the board persona's name and avatar, chat, "Agent mode" switch, streaming render, tool-call badges, "Applied N changes — Undo" notification.
 
 ## Templates, personas and demo
-- **Template** (`backend/app/templates/<id>.py`, registered in `app/templates/__init__.py`): id, name, description, persona id, and the portal's boards, each with its widgets (type, layout, config) and a **sample-data generator**. Sample data is generated relative to today, so the demo always looks current. Widgets reference each other (e.g. a chart's `sourceWidgetId`) by template-local keys that are resolved to real ids when copied.
-- **Copy-on-create:** `POST /portals {template}` copies the template into new rows in one transaction. After that the portal belongs to the user; template changes never alter existing portals, and user changes never alter the template.
-- **Wellness studio** (first template), draft content refined in its issue:
+- **Template** (`backend/app/templates/<id>.py`, registered in `app/templates/__init__.py`): id, name, description, default portal name, a default persona id, and the portal's boards (each with an optional persona id), each with its widgets (type, layout, config) and a **sample-data generator**. Sample data is generated relative to today, so the demo always looks current. Widgets reference each other (a chart's `source.widget`) by template-local keys that are resolved to real ids when copied. Templates live in **code**, not the database: the sample data is a function of today's date, and templates are reviewed, versioned and tested like the rest of the code (user-made templates could be stored in the database later).
+- **Copy-on-create:** `POST /portals {template_id}` calls `create_portal(...)`, which copies the template into new rows in one transaction. **Sample data is only copied for the demo** (`with_sample_data=True`); real owners get the structure with empty tables (the default, `with_sample_data=False`). After that the portal belongs to the user; template changes never alter existing portals, and user changes never alter the template.
+- **Wellness studio** (first template, #6): **Atrium Spa and Wellness**, about 100 members, 30 classes a week (Yoga, Pilates, Upper body toning, Lower body toning), memberships (Monthly unlimited, 10-class pack, Drop-in), and spa services priced per service with 15% off for monthly members.
 
-  | Board | Widgets |
-  |---|---|
-  | Overview | stats: active members, revenue this month, classes this week; attendance trend chart |
-  | Schedule | schedule (week view of classes and appointments); class fill-rate chart |
-  | Members | members table; membership types pie chart |
-  | Revenue | revenue by month chart; payments table |
-  
-  Persona: a calm, encouraging studio-management coach (class fill rates, retention, instructor scheduling, revenue), with its own avatar.
+  | Board | Persona | Widgets |
+  |---|---|---|
+  | Overview | `studio-manager` (default) | stats: active members, revenue this month (vs previous), classes this week, spa bookings this week; weekly attendance chart |
+  | Schedule | `secretary` | schedule (week view of classes and appointments); average attendance by class type |
+  | Members | `yoga-instructor` | members table; membership mix pie chart |
+  | Revenue | `accountant` | revenue by month stacked by revenue stream; spa revenue this month; sales table |
 - **Demo:** `/demo` → guest user + wellness studio portal (see *Authentication*); fully interactive, private to that visitor, expires after 24 hours.
 
 ## Repo layout
@@ -166,7 +165,7 @@ No app code is written in this step.
 5. **Extensions**: portals and boards UI, add/remove/edit widgets, generic chart/stat/table widgets, schedule widget, public demo with guest sessions.
 6. **Claude**: personas, advice port, assistant chat, board agent + undo.
 7. **CI + deploy**: `ci.yml`, Turso DB + token, `migrate.yml` (Linux, `alembic upgrade head`), Vercel project + env vars + `vercel.json` (wiring checked against current Vercel FastAPI docs), production OAuth callbacks.
-8. **Look & feel**: build the `/styleguide` page first (it doubles as the mockup to review), then the theme, tokens, glass, background and motion, then apply them across the app (see the Clean Future look plan).
+8. **Look & feel**: the `/styleguide` page and the theme, tokens, glass, neon text and contrast test were built early (#43, #44, with #70 finishing the styleguide); this milestone applies them across the app: app-wide background, app shell, widget and chart restyle, motion (see the Clean Future look plan).
 
 ## Verification
 - `uv run pytest`: CRUD + owner scoping (user → portal → board → widget), create-portal-from-template copies every board, widget and data row with references resolved, cascading deletes, guest expiry, auth flows with mocked Authlib, AI tools with a mocked Anthropic client. CI repeats on `sqlite+libsql:///test.db`.
