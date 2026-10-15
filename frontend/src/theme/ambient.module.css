@@ -17,3 +17,24 @@
   --blob-lime: rgba(198, 255, 90, 0.1);
   --blob-lilac: rgba(167, 123, 255, 0.18);
 }
+
+/* The app-wide background: fills the screen behind everything, never catches clicks,
+   and drifts very slowly (paused under reduced motion, see motion.css). */
+.fixed {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-size: 140% 140%;
+  animation: drift 60s ease-in-out infinite alternate;
+  animation-play-state: var(--pb-drift);
+}
+
+@keyframes drift {
+  from {
+    background-position: 30% 20%;
+  }
+  to {
+    background-position: 70% 60%;
+  }
+}

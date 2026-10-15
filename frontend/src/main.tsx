@@ -14,6 +14,7 @@ import {RouterProvider} from "react-router/dom"
 import {StrictMode} from "react"
 
 import App from "./App"
+import AmbientBackground from "./theme/AmbientBackground"
 import {cssVariablesResolver, theme} from "./theme/theme"
 
 const queryClient = new QueryClient()
@@ -46,6 +47,7 @@ createRoot(document.getElementById("root")!).render(
       defaultColorScheme="light"
       theme={theme}
       cssVariablesResolver={cssVariablesResolver}>
+      <AmbientBackground fixed />
       <QueryClientProvider client={queryClient}>
         <Notifications />
         <ModalsProvider>

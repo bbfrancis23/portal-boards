@@ -10,7 +10,6 @@ import {
 } from "@mantine/core"
 import {Link} from "react-router"
 
-import AmbientBackground from "@/theme/AmbientBackground"
 import StatCard, {type StatCardProps} from "./StatCard"
 import LineChartCard from "./LineChartCard"
 import DonutChartCard from "./DonutChartCard"
@@ -63,47 +62,45 @@ const SampleBoard = () => {
   const {colorScheme, setColorScheme} = useMantineColorScheme()
 
   return (
-    <AmbientBackground style={{minHeight: "100vh"}}>
-      <Stack p="xl" gap="lg" maw={1400} mx="auto">
-        <Group justify="space-between">
-          <Stack gap={0}>
-            <Title order={2}>Atrium Spa and Wellness</Title>
-            <Text c="dimmed">Overview</Text>
-          </Stack>
-          <Group>
-            <Anchor component={Link} to="/styleguide">
-              ← Styleguide
-            </Anchor>
-            <SegmentedControl
-              data={[
-                {label: "Lite", value: "light"},
-                {label: "Nite", value: "dark"},
-              ]}
-              onChange={(value) => setColorScheme(value)}
-              value={colorScheme}
-            />
-          </Group>
+    <Stack p="xl" gap="lg" maw={1400} mx="auto">
+      <Group justify="space-between">
+        <Stack gap={0}>
+          <Title order={2}>Atrium Spa and Wellness</Title>
+          <Text c="dimmed">Overview</Text>
+        </Stack>
+        <Group>
+          <Anchor component={Link} to="/styleguide">
+            ← Styleguide
+          </Anchor>
+          <SegmentedControl
+            data={[
+              {label: "Lite", value: "light"},
+              {label: "Nite", value: "dark"},
+            ]}
+            onChange={(value) => setColorScheme(value)}
+            value={colorScheme}
+          />
         </Group>
+      </Group>
 
-        <Grid>
-          {STAT_CARDS.map((card) => (
-            <StatCard {...card} key={card.title} />
-          ))}
-          {LINECHART_CARDS.map((card) => (
-            <LineChartCard {...card} key={card.title} />
-          ))}
-          {DONUTCHART_CARDS.map((card) => (
-            <DonutChartCard {...card} key={card.title} />
-          ))}
-          {TABLE_CARDS.map((card) => (
-            <TableCard {...card} key={card.title} />
-          ))}
-          {SCHEDULE_CARDS.map((card) => (
-            <ScheduleCard {...card} key={card.title} />
-          ))}
-        </Grid>
-      </Stack>
-    </AmbientBackground>
+      <Grid>
+        {STAT_CARDS.map((card) => (
+          <StatCard {...card} key={card.title} />
+        ))}
+        {LINECHART_CARDS.map((card) => (
+          <LineChartCard {...card} key={card.title} />
+        ))}
+        {DONUTCHART_CARDS.map((card) => (
+          <DonutChartCard {...card} key={card.title} />
+        ))}
+        {TABLE_CARDS.map((card) => (
+          <TableCard {...card} key={card.title} />
+        ))}
+        {SCHEDULE_CARDS.map((card) => (
+          <ScheduleCard {...card} key={card.title} />
+        ))}
+      </Grid>
+    </Stack>
   )
 }
 

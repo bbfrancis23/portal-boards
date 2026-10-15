@@ -6,6 +6,8 @@
   --pb-dur-fast: 150ms;
   --pb-dur: 300ms;
   --pb-dur-slow: 450ms;
+  /* The ambient background's slow drift. */
+  --pb-drift: running;
 }
 
 /* Reduced motion: when the operating system asks for it, or when the styleguide's
@@ -15,6 +17,7 @@
     --pb-dur-fast: 1ms;
     --pb-dur: 1ms;
     --pb-dur-slow: 1ms;
+    --pb-drift: paused;
   }
 }
 
@@ -22,4 +25,5 @@
   --pb-dur-fast: 1ms;
   --pb-dur: 1ms;
   --pb-dur-slow: 1ms;
+  --pb-drift: paused;
 }
