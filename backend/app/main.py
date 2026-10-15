@@ -2,13 +2,15 @@ from fastapi import FastAPI
 from sqlalchemy import select
 
 from app.db import SessionDep
-from app.routers import boards, portals, templates
+from app.routers import boards, portals, templates, widgets
 
 app = FastAPI(title="portal-boards")
 app.include_router(templates.router)
 app.include_router(portals.router)
 app.include_router(boards.routerPortal)
 app.include_router(boards.routerBoard)
+app.include_router(widgets.routerBoard)
+app.include_router(widgets.routerWidget)
 
 
 @app.get("/api/health")
