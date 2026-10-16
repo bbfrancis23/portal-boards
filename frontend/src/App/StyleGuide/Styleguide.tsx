@@ -13,16 +13,15 @@ import {
 import {useReducedMotion} from "@mantine/hooks"
 import {useEffect, useState} from "react"
 import {Link} from "react-router"
-
-import Section from "./styleguide/Section"
-import Swatches from "./styleguide/Swatches"
-import TypeScale from "./styleguide/TypeScale"
-import Controls from "./styleguide/Controls"
-import ColorScales from "./styleguide/ColorScales"
-import Glass from "./styleguide/Glass"
-import Shadows from "./styleguide/Shadows"
-import Overlays from "./styleguide/Overlays"
-import EmptyStates from "./styleguide/EmptyStates"
+import ColorScales from "./ColorScales"
+import Controls from "./Controls"
+import EmptyStates from "./EmptyStates"
+import Glass from "./Glass"
+import Overlays from "./Overlays"
+import Section from "./Section"
+import Shadows from "./Shadows"
+import Swatches from "./Swatches"
+import TypeScale from "./TypeScale"
 
 const Styleguide = () => {
   const {colorScheme, setColorScheme} = useMantineColorScheme()

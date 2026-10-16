@@ -1,0 +1,49 @@
+.header {
+  composes: glass from "@/theme/glass.module.css";
+  border-radius: var(--mantine-radius-xl);
+  top: 12px;
+  left: 12px;
+  right: 12px;
+}
+
+.navbar {
+  composes: glass from "@/theme/glass.module.css";
+  border-radius: var(--mantine-radius-xl);
+  left: 12px;
+  bottom: 12px;
+  height: auto;
+  top: calc(var(--app-shell-header-offset) + 24px);
+}
+
+.aside {
+  composes: glass from "@/theme/glass.module.css";
+  border-radius: var(--mantine-radius-xl);
+  right: 12px;
+  bottom: 12px;
+  height: auto;
+  top: calc(var(--app-shell-header-offset) + 24px);
+}
+
+/* Below a panel's breakpoint Mantine makes it full width and slides it off screen by its own
+   width when closed. Keep the 12px gap on both sides, and slide 24px further so no edge shows. */
+@media (max-width: 48em) {
+  .navbar {
+    right: 12px;
+    width: auto;
+  }
+
+  .navbar[data-closed] {
+    translate: -24px;
+  }
+}
+
+@media (max-width: 62em) {
+  .aside {
+    left: 12px;
+    width: auto;
+  }
+
+  .aside[data-closed] {
+    translate: 24px;
+  }
+}

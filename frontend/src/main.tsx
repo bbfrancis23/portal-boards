@@ -13,28 +13,42 @@ import {Notifications} from "@mantine/notifications"
 import {RouterProvider} from "react-router/dom"
 import {StrictMode} from "react"
 
-import App from "./App"
 import AmbientBackground from "./theme/AmbientBackground"
 import {cssVariablesResolver, theme} from "./theme/theme"
+import AppLayout from "./App/Layout/AppLayout"
+import PublicLayout from "./App/Layout/PublicLayout"
+import App from "./App/App"
+import LogIn from "./App/LogIn"
 
 const queryClient = new QueryClient()
 
 const router = createBrowserRouter([
+  // Pages outside a portal (home, log in): a layout route with no path of its own, so it only
+  // wraps them. App is a placeholder until the landing page is built.
   {
-    path: "/",
-    element: <App />,
+    element: <PublicLayout />,
+    children: [
+      {index: true, element: <App />},
+      {path: "log-in", element: <LogIn />},
+    ],
+  },
+  // Portal pages (#23 adds :portalId/boards/:boardId). App is a placeholder for now.
+  {
+    path: "portals",
+    element: <AppLayout />,
+    children: [{index: true, element: <App />}],
   },
   ...(import.meta.env.DEV
     ? [
         {
           path: "/styleguide",
-          lazy: async () => ({Component: (await import("./pages/Styleguide")).default}),
+          lazy: async () => ({Component: (await import("./App/StyleGuide/Styleguide")).default}),
         },
 
         {
           path: "/styleguide/sample-board",
           lazy: async () => ({
-            Component: (await import("./pages/styleguide/sample-board/SampleBoard")).default,
+            Component: (await import("./App/StyleGuide/SampleBoard/SampleBoard")).default,
           }),
         },
       ]
