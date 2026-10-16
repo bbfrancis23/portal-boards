@@ -1,0 +1,78 @@
+/* The "portal boards" wordmark (LOOK.md): neon-outline letters, a rainbow portal ring for each "o",
+   and a rainbow underline on hover. */
+.logo {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--mantine-font-family-headings);
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+}
+
+/* Phones: smaller, so the header fits on one row. The rings are sized in em, so they follow. */
+@media (max-width: 30em) {
+  .logo {
+    font-size: 22px;
+  }
+}
+
+.letters {
+  composes: neon from "@/theme/neon.module.css";
+}
+
+/* The space between "portal" and "boards". */
+.word {
+  margin-inline-start: 0.3em;
+}
+
+/* The ring is the size of a lowercase "o" and sits on the baseline. The span itself carries
+   the glow; its ::before draws the 2px rainbow stroke with the same mask trick as the chrome
+   outline in glass.module.css. */
+.ring {
+  position: relative;
+  display: inline-block;
+  width: 0.56em;
+  height: 0.56em;
+  margin-inline: 0.05em;
+  border-radius: 50%;
+  box-shadow: var(--pb-glow-sm);
+}
+
+.ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  border-radius: inherit;
+  background: var(--pb-rainbow);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+}
+
+.logo::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--pb-rainbow);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--pb-dur) var(--pb-ease);
+}
+
+.logo:hover::after,
+.logo:focus-visible::after {
+  transform: scaleX(1);
+}
