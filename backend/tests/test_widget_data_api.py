@@ -64,6 +64,20 @@ def test_create_widget_data_without_data_is_422(
     assert response.status_code == 422
 
 
+def test_create_widget_data_with_an_empty_row_is_422(
+    client: TestClient, session: Session, dev_user: User
+) -> None:
+    widget = widget_with_rows(session, dev_user)
+    rows_before = len(widget_rows(session, widget.id))
+
+    response = client.post(
+        f"/api/boards/{widget.board_id}/widgets/{widget.id}/data", json={"data": {}}
+    )
+
+    assert response.status_code == 422
+    assert len(widget_rows(session, widget.id)) == rows_before
+
+
 def test_create_widget_data_on_a_stat_widget_is_422(client: TestClient) -> None:
     portal_id = client.post(
         "/api/portals", json={"name": "Atrium", "template_id": "wellness-studio"}
