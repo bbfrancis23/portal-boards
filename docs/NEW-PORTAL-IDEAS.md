@@ -57,29 +57,78 @@ a plain `where: {status: "late"}` query, with no need to compare two tables.
 
 ```python
 # Overview
-{"title": "Occupied units", "format": "number",
- "source": {"widget": "units", "aggregate": "count", "where": {"status": "occupied"}}}
+{
+    "title": "Occupied units",
+    "format": "number",
+    "source": {
+        "widget": "units",
+        "aggregate": "count",
+        "where": {"status": "occupied"},
+    },
+}
 
-{"title": "Rent collected this month", "format": "currency", "compare": "previous_period",
- "source": {"widget": "rent_roll", "aggregate": "sum", "field": "paid",
-            "dateField": "month", "period": "this_month"}}
+{
+    "title": "Rent collected this month",
+    "format": "currency",
+    "compare": "previous_period",
+    "source": {
+        "widget": "rent_roll",
+        "aggregate": "sum",
+        "field": "paid",
+        "dateField": "month",
+        "period": "this_month",
+    },
+}
 
-{"title": "Late or unpaid this month", "format": "number",
- "source": {"widget": "rent_roll", "aggregate": "count", "where": {"status": "late"},
-            "dateField": "month", "period": "this_month"}}
+{
+    "title": "Late or unpaid this month",
+    "format": "number",
+    "source": {
+        "widget": "rent_roll",
+        "aggregate": "count",
+        "where": {"status": "late"},
+        "dateField": "month",
+        "period": "this_month",
+    },
+}
 
-{"title": "Open maintenance requests", "format": "number",
- "source": {"widget": "maintenance", "aggregate": "count", "where": {"status": "open"}}}
+{
+    "title": "Open maintenance requests",
+    "format": "number",
+    "source": {
+        "widget": "maintenance",
+        "aggregate": "count",
+        "where": {"status": "open"},
+    },
+}
 
 # Maintenance
-{"title": "Repair cost by unit", "chartType": "bar",
- "source": {"widget": "maintenance", "aggregate": "sum", "field": "cost", "groupBy": "unit"}}
+{
+    "title": "Repair cost by unit",
+    "chartType": "bar",
+    "source": {
+        "widget": "maintenance",
+        "aggregate": "sum",
+        "field": "cost",
+        "groupBy": "unit",
+    },
+}
 
 # Expenses
-{"title": "Expenses by month", "chartType": "bar", "stacked": True,
- "source": {"widget": "expenses", "aggregate": "sum", "field": "amount",
-            "dateField": "date", "bucket": "month", "period": "last_6_months",
-            "seriesBy": "category"}}
+{
+    "title": "Expenses by month",
+    "chartType": "bar",
+    "stacked": True,
+    "source": {
+        "widget": "expenses",
+        "aggregate": "sum",
+        "field": "amount",
+        "dateField": "date",
+        "bucket": "month",
+        "period": "last_6_months",
+        "seriesBy": "category",
+    },
+}
 ```
 
 ### Personas
