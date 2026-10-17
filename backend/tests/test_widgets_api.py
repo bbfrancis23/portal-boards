@@ -178,3 +178,18 @@ def test_other_users_widgets_are_protected(
     assert client.delete(f"/api/widgets/{their_widget.id}").status_code == 404
     session.refresh(their_widget)
     assert (their_widget.x, their_widget.y, their_widget.w, their_widget.h) == before
+
+
+def test_list_widget_data_in_id_order(client: TestClient, session: Session, dev_user: User) -> None:
+    create_portal(session, dev_user.id, "Atrium", "wellness-studio", with_sample_data=True)
+    row = session.scalars(select(WidgetData)).first()
+    assert row is not None
+    widget = session.get(WidgetInstance, row.widget_instance_id)
+    assert widget is not None
+
+    board_id, widget_id = widget.board_id, widget.id
+
+    response = client.get(f"/api/boards/{board_id}/widgets/{widget_id}/data")
+    ids = [r["id"] for r in response.json()]
+    assert len(ids) > 0
+    assert ids == sorted(ids)

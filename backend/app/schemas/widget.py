@@ -24,7 +24,7 @@ class WidgetCreate(BaseModel):
 
 
 class WidgetDataCreate(BaseModel):
-    data: dict[str, Any]
+    data: dict[str, Any] = Field(min_length=1)
 
 
 class WidgetRead(BaseModel):
