@@ -23,6 +23,10 @@ class WidgetCreate(BaseModel):
     config: dict[str, Any] = Field(default_factory=dict)
 
 
+class WidgetDataCreate(BaseModel):
+    data: dict[str, Any]
+
+
 class WidgetRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -34,6 +38,15 @@ class WidgetRead(BaseModel):
     w: int
     h: int
     config: dict[str, Any]
+    created_at: datetime
+
+
+class WidgetDataRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    widget_instance_id: int
+    data: dict[str, Any]
     created_at: datetime
 
 
