@@ -459,7 +459,9 @@ def _month_starts(first: date, today: date) -> list[date]:
     return months
 
 
-def _sales(rng: random.Random, today: date, members: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _sales(  # noqa: C901 (tech debt: split it, #96)
+    rng: random.Random, today: date, members: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
     """Sales for this month and the previous five, across all four revenue streams."""
     first = today.replace(day=1)
     for _ in range(5):
