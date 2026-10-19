@@ -1,3 +1,4 @@
+import os
 from collections.abc import Iterator
 
 import pytest
@@ -6,10 +7,17 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
-from app.auth import get_current_user
+from app.auth import DEV_EMAIL, create_session_token
+from app.config import get_settings
 from app.db import get_session
 from app.main import app
 from app.models import Base, User
+
+# Tests sign their own session tokens, so they need a secret even where there's no .env (CI).
+# A real environment variable wins over .env, so this also keeps tests off your local secret.
+# Importing the app above already read (and cached) the settings, so clear that cache.
+os.environ["JWT_SECRET"] = "test-secret-not-used-anywhere-else-0123456789"
+get_settings.cache_clear()
 
 
 @pytest.fixture
@@ -42,8 +50,21 @@ def user(session: Session) -> User:
 
 
 @pytest.fixture
-def client(session: Session) -> Iterator[TestClient]:
-    """An API client whose routes use the test database instead of the real one."""
+def client(session: Session, dev_user: User) -> Iterator[TestClient]:
+    """An API client on the test database, logged in as the dev user (it sends their cookie)."""
+    app.dependency_overrides[get_session] = lambda: session
+    with TestClient(app) as test_client:
+        # Set for the test client's own domain, as the server would, so a logout really removes it.
+        test_client.cookies.set(
+            "pb_session", create_session_token(dev_user.id), domain="testserver.local"
+        )
+        yield test_client
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def anonymous_client(session: Session) -> Iterator[TestClient]:
+    """An API client on the test database that isn't logged in (no cookie)."""
     app.dependency_overrides[get_session] = lambda: session
     with TestClient(app) as test_client:
         yield test_client
@@ -52,8 +73,12 @@ def client(session: Session) -> Iterator[TestClient]:
 
 @pytest.fixture
 def dev_user(session: Session) -> User:
-    """The user the API acts as (the temporary dev user, until real login in M3)."""
-    return get_current_user(session)
+    """The user the `client` fixture is logged in as."""
+    user = User(email=DEV_EMAIL, display_name="Dev")
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
 
 
 @pytest.fixture

@@ -158,14 +158,19 @@ No app code is written in this step.
 **Workflow afterwards** (as in compass-boards): branch `<issue#>-short-name` → PR with `Closes #N` → merge to `main`.
 
 ## Build order
-1. **Bootstrap** (repo already created in Step 0): monorepo skeleton, backend and frontend scaffolds, root dev script.
-2. **Backend core**: config, models (with portals), Alembic, wellness studio template + create-portal-from-template, template/portal/board/widget/data routers + tests.
-3. **Auth**: Authlib GitHub/Google + JWT cookie + tests.
-4. **Frontend port**: Vite + Mantine 9 + React Compiler, copy/port compass's widget engine, generated client, sign-in, portal and board navigation, a wellness studio portal working end-to-end (engine parity with compass).
-5. **Extensions**: portals and boards UI, add/remove/edit widgets, generic chart/stat/table widgets, schedule widget, public demo with guest sessions.
-6. **Claude**: personas, advice port, assistant chat, board agent + undo.
-7. **CI + deploy**: `ci.yml`, Turso DB + token, `migrate.yml` (Linux, `alembic upgrade head`), Vercel project + env vars + `vercel.json` (wiring checked against current Vercel FastAPI docs), production OAuth callbacks.
-8. **Look & feel**: the `/styleguide` page and the theme, tokens, glass, neon text and contrast test were built early (#43, #44, with #70 finishing the styleguide); this milestone applies them across the app: app-wide background, app shell, widget and chart restyle, motion (see the Clean Future look plan).
+Since 2026-10-18 the roadmap is organized **by feature**: each milestone mixes backend and frontend work, backend first. Milestone names carry no numbers, so this list is the order:
+
+1. **Bootstrap** (done): monorepo skeleton, backend and frontend scaffolds, root dev script.
+2. **Backend core** (done): config, models (with portals), Alembic, wellness studio template + create-portal-from-template, template/portal/board/widget/data routers + tests. The styleguide, theme, ambient background and app shell were also built early (#43–#46).
+3. **Log in**: JWT cookie session and `get_current_user`, GitHub and Google OAuth, account linking, rate limiting, auth tests, owner-scoping tests; then the typed API client and the log-in page, RequireAuth and user menu.
+4. **Deploy**: Turso DB + migrate workflow, Vercel project + env vars + `vercel.json`, production OAuth callbacks and smoke test.
+5. **Portals and boards**: default portal (backend); portal and board nav and routes, the Portals page (create, rename, delete, make default), navbar board links look.
+6. **Board canvas**: port compass's widget engine (registry, data bus, registrations, DashboardCanvas, Form/LineChart/Advice widgets), parity check, widget restyle, motion and grid styling.
+7. **Widget types**: widget config schemas (backend); add/edit/remove widget UI, stat, chart, data table and schedule widgets.
+8. **Settings**: the settings page (account, appearance, delete account) and the navbar settings link. Portals have their own page, not settings.
+9. **Demo**: public demo with guest sessions, and the landing page.
+10. **AI assistant**: Anthropic client, personas per board, advice, assistant chat and panel, conversation persistence, agent tools and loop, undo, AI tests.
+11. **Polish**: contrast, performance and browser verification.
 
 ## Verification
 - `uv run pytest`: CRUD + owner scoping (user → portal → board → widget), create-portal-from-template copies every board, widget and data row with references resolved, cascading deletes, guest expiry, auth flows with mocked Authlib, AI tools with a mocked Anthropic client. CI repeats on `sqlite+libsql:///test.db`.
