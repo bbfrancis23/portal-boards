@@ -24,11 +24,12 @@ def test_secrets_are_hidden(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.jwt_secret.get_secret_value() == "super-secret-but-long-enough-to-be-allowed"
 
 
+@pytest.mark.parametrize("name", ["JWT_SECRET", "SESSION_SECRET"])
 @pytest.mark.parametrize("secret", ["", "abc"])
-def test_app_refuses_to_start_with_a_weak_jwt_secret(
-    monkeypatch: pytest.MonkeyPatch, secret: str
+def test_app_refuses_to_start_with_a_weak_secret(
+    monkeypatch: pytest.MonkeyPatch, name: str, secret: str
 ) -> None:
-    monkeypatch.setattr(get_settings(), "jwt_secret", SecretStr(secret))
+    monkeypatch.setattr(get_settings(), name.lower(), SecretStr(secret))
 
-    with pytest.raises(RuntimeError, match="JWT_SECRET"), TestClient(app):
+    with pytest.raises(RuntimeError, match=name), TestClient(app):
         pass
