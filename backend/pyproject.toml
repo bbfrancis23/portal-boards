@@ -32,7 +32,11 @@ select = [
     "UP",  # pyupgrade: modern Python syntax
     "B",   # flake8-bugbear: likely bugs
     "SIM", # flake8-simplify: simpler equivalents
+    "C901", # mccabe: functions with too many decision paths (see max-complexity)
 ]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

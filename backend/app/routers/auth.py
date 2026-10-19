@@ -49,7 +49,7 @@ async def github_callback(request: Request, session: SessionDep) -> RedirectResp
         session,
         provider="github",
         provider_account_id=str(profile["id"]),
-        email=email,
+        verified_email=email,
         display_name=profile["name"] or profile["login"],
         avatar_url=profile.get("avatar_url"),
     )
@@ -83,7 +83,7 @@ async def google_callback(request: Request, session: SessionDep) -> RedirectResp
         session,
         provider="google",
         provider_account_id=userinfo["sub"],
-        email=userinfo["email"],
+        verified_email=userinfo["email"],
         display_name=userinfo.get("name") or userinfo["email"],
         avatar_url=userinfo.get("picture"),
     )
