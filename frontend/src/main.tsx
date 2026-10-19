@@ -19,6 +19,7 @@ import AppLayout from "./App/Layout/AppLayout"
 import PublicLayout from "./App/Layout/PublicLayout"
 import App from "./App/App"
 import LogIn from "./App/LogIn"
+import {RequireAuth} from "./components/RequireAuth"
 
 const queryClient = new QueryClient()
 
@@ -34,9 +35,14 @@ const router = createBrowserRouter([
   },
   // Portal pages (#23 adds :portalId/boards/:boardId). App is a placeholder for now.
   {
-    path: "portals",
-    element: <AppLayout />,
-    children: [{index: true, element: <App />}],
+    element: <RequireAuth />,
+    children: [
+      {
+        path: "portals",
+        element: <AppLayout />,
+        children: [{index: true, element: <App />}],
+      },
+    ],
   },
   ...(import.meta.env.DEV
     ? [

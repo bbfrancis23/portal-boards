@@ -57,7 +57,7 @@ async def github_callback(request: Request, session: SessionDep) -> RedirectResp
         display_name=profile["name"] or profile["login"],
         avatar_url=profile.get("avatar_url"),
     )
-    response = RedirectResponse(app_url)
+    response = RedirectResponse(f"{app_url}/portals")
     set_session_cookie(response, user.id)
     return response
 
@@ -93,6 +93,6 @@ async def google_callback(request: Request, session: SessionDep) -> RedirectResp
         display_name=userinfo.get("name") or userinfo["email"],
         avatar_url=userinfo.get("picture"),
     )
-    response = RedirectResponse(app_url)
+    response = RedirectResponse(f"{app_url}/portals")
     set_session_cookie(response, user.id)
     return response

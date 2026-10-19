@@ -126,6 +126,7 @@ def test_github_callback_logs_in_a_new_user(
     )
     response = anonymous_client.get("/api/auth/github/callback", follow_redirects=False)
     assert response.status_code == 307
+    assert response.headers["location"].endswith("/portals")  # straight into the app
     assert "pb_session" in response.cookies
     me = anonymous_client.get("/api/users/me").json()
     assert me["email"] == "new@example.com"
