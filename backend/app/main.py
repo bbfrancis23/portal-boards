@@ -2,11 +2,14 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy import select
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_settings, require_secret
 from app.db import SessionDep
+from app.rate_limit import limiter
 from app.routers import auth, boards, portals, templates, widget_data, widgets
 
 
@@ -24,6 +27,9 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="portal-boards", lifespan=lifespan)
+app.state.limiter = limiter
+# Over the limit: 429 with a JSON body, e.g. {"error": "Rate limit exceeded: 10 per 1 minute"}.
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 settings = get_settings()
 app.add_middleware(
     SessionMiddleware,

@@ -8,6 +8,7 @@ from app.auth import CurrentUserDep, clear_session_cookie, set_session_cookie
 from app.config import get_settings
 from app.db import SessionDep
 from app.oauth import oauth
+from app.rate_limit import AUTH_LIMIT, limiter
 from app.schemas.user import UserRead
 from app.services.users_service import find_or_create_oauth_user
 
@@ -20,11 +21,13 @@ def get_user(user: CurrentUserDep) -> UserRead:
 
 
 @router.post("/auth/logout", status_code=status.HTTP_204_NO_CONTENT)
-def logout_user(response: Response) -> None:
+@limiter.limit(AUTH_LIMIT)
+def logout_user(request: Request, response: Response) -> None:
     clear_session_cookie(response)
 
 
 @router.get("/auth/github/login")
+@limiter.limit(AUTH_LIMIT)
 async def github_login(request: Request) -> RedirectResponse:
     """Send the browser to GitHub's "Authorize portal-boards?" page."""
     redirect_uri = f"{get_settings().app_url}/api/auth/github/callback"
@@ -32,6 +35,7 @@ async def github_login(request: Request) -> RedirectResponse:
 
 
 @router.get("/auth/github/callback")
+@limiter.limit(AUTH_LIMIT)
 async def github_callback(request: Request, session: SessionDep) -> RedirectResponse:
     """GitHub sends the browser back here: log the user in and return to the app."""
     app_url = get_settings().app_url
@@ -59,6 +63,7 @@ async def github_callback(request: Request, session: SessionDep) -> RedirectResp
 
 
 @router.get("/auth/google/login")
+@limiter.limit(AUTH_LIMIT)
 async def google_login(request: Request) -> RedirectResponse:
     """Send the browser to Google's "Authorize portal-boards?" page."""
     redirect_uri = f"{get_settings().app_url}/api/auth/google/callback"
@@ -66,6 +71,7 @@ async def google_login(request: Request) -> RedirectResponse:
 
 
 @router.get("/auth/google/callback")
+@limiter.limit(AUTH_LIMIT)
 async def google_callback(request: Request, session: SessionDep) -> RedirectResponse:
     """Google sends the browser back here: log the user in and return to the app."""
     app_url = get_settings().app_url
