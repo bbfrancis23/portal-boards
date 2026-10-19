@@ -56,3 +56,37 @@ async def github_callback(request: Request, session: SessionDep) -> RedirectResp
     response = RedirectResponse(app_url)
     set_session_cookie(response, user.id)
     return response
+
+
+@router.get("/auth/google/login")
+async def google_login(request: Request) -> RedirectResponse:
+    """Send the browser to Google's "Authorize portal-boards?" page."""
+    redirect_uri = f"{get_settings().app_url}/api/auth/google/callback"
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+
+@router.get("/auth/google/callback")
+async def google_callback(request: Request, session: SessionDep) -> RedirectResponse:
+    """Google sends the browser back here: log the user in and return to the app."""
+    app_url = get_settings().app_url
+    try:
+        token = await oauth.google.authorize_access_token(request)
+    except OAuthError:
+        # The user clicked Cancel on Google, or the state didn't match.
+        return RedirectResponse(f"{app_url}/log-in")
+
+    userinfo = token["userinfo"]
+    if not userinfo.get("email_verified"):
+        return RedirectResponse(f"{app_url}/log-in")
+
+    user = find_or_create_oauth_user(
+        session,
+        provider="google",
+        provider_account_id=userinfo["sub"],
+        email=userinfo["email"],
+        display_name=userinfo.get("name") or userinfo["email"],
+        avatar_url=userinfo.get("picture"),
+    )
+    response = RedirectResponse(app_url)
+    set_session_cookie(response, user.id)
+    return response
