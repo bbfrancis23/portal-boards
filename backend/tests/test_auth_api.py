@@ -220,3 +220,18 @@ def test_cancelled_log_in_goes_back_to_the_log_in_page(
     assert response.status_code == 307
     assert response.headers["location"].endswith("/log-in")
     assert "pb_session" not in response.cookies
+
+
+def test_the_11th_auth_request_in_a_minute_is_429(client: TestClient) -> None:
+    for _ in range(10):
+        assert client.post("/api/auth/logout").status_code == 204
+
+    response = client.post("/api/auth/logout")
+
+    assert response.status_code == 429
+    assert "Rate limit exceeded" in response.json()["error"]
+
+
+def test_users_me_is_not_rate_limited(client: TestClient) -> None:
+    for _ in range(15):
+        assert client.get("/api/users/me").status_code == 200

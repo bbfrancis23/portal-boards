@@ -12,6 +12,7 @@ from app.config import get_settings
 from app.db import get_session
 from app.main import app
 from app.models import Base, User
+from app.rate_limit import limiter
 
 # Tests sign their own session tokens, so they need secrets even where there's no .env (CI).
 # A real environment variable wins over .env, so this also keeps tests off your local secret.
@@ -90,3 +91,9 @@ def other_user(session: Session) -> User:
     session.commit()
     session.refresh(other)
     return other
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limits() -> None:
+    """Every test starts with fresh rate-limit counts (they're kept in memory between requests)."""
+    limiter.reset()
