@@ -7,16 +7,17 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
-from app.auth import DEV_EMAIL, create_session_token
+from app.auth import create_session_token
 from app.config import get_settings
 from app.db import get_session
 from app.main import app
 from app.models import Base, User
 
-# Tests sign their own session tokens, so they need a secret even where there's no .env (CI).
+# Tests sign their own session tokens, so they need secrets even where there's no .env (CI).
 # A real environment variable wins over .env, so this also keeps tests off your local secret.
 # Importing the app above already read (and cached) the settings, so clear that cache.
 os.environ["JWT_SECRET"] = "test-secret-not-used-anywhere-else-0123456789"
+os.environ["SESSION_SECRET"] = "test-session-secret-not-used-anywhere-else-0123"
 get_settings.cache_clear()
 
 
@@ -74,7 +75,7 @@ def anonymous_client(session: Session) -> Iterator[TestClient]:
 @pytest.fixture
 def dev_user(session: Session) -> User:
     """The user the `client` fixture is logged in as."""
-    user = User(email=DEV_EMAIL, display_name="Dev")
+    user = User(email="dev@portal-boards.local", display_name="Dev")
     session.add(user)
     session.commit()
     session.refresh(user)

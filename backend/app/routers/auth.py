@@ -1,11 +1,15 @@
-from fastapi import APIRouter, HTTPException, Response, status
-from sqlalchemy import select
+from typing import Any
 
-from app.auth import DEV_EMAIL, CurrentUserDep, clear_session_cookie, set_session_cookie
+from authlib.integrations.starlette_client import OAuthError
+from fastapi import APIRouter, Request, Response, status
+from fastapi.responses import RedirectResponse
+
+from app.auth import CurrentUserDep, clear_session_cookie, set_session_cookie
 from app.config import get_settings
 from app.db import SessionDep
-from app.models import User
+from app.oauth import oauth
 from app.schemas.user import UserRead
+from app.services.users_service import find_or_create_oauth_user
 
 router = APIRouter(prefix="/api", tags=["auth", "user"])
 
@@ -20,18 +24,35 @@ def logout_user(response: Response) -> None:
     clear_session_cookie(response)
 
 
-@router.post("/auth/dev-login", status_code=status.HTTP_204_NO_CONTENT)
-def dev_login(session: SessionDep, response: Response) -> None:
-    """Temporary: log in as the dev user until GitHub log-in exists (#12 removes this).
+@router.get("/auth/github/login")
+async def github_login(request: Request) -> RedirectResponse:
+    """Send the browser to GitHub's "Authorize portal-boards?" page."""
+    redirect_uri = f"{get_settings().app_url}/api/auth/github/callback"
+    return await oauth.github.authorize_redirect(request, redirect_uri)
 
-    Only works when DEV_LOGIN_ENABLED=true; otherwise it behaves as if the route didn't exist.
-    """
-    if not get_settings().dev_login_enabled:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not Found")
-    user = session.scalar(select(User).where(User.email == DEV_EMAIL))
-    if user is None:
-        user = User(email=DEV_EMAIL, display_name="Dev")
-        session.add(user)
-        session.commit()
-        session.refresh(user)
+
+@router.get("/auth/github/callback")
+async def github_callback(request: Request, session: SessionDep) -> RedirectResponse:
+    """GitHub sends the browser back here: log the user in and return to the app."""
+    app_url = get_settings().app_url
+    try:
+        token = await oauth.github.authorize_access_token(request)
+    except OAuthError:
+        # The user clicked Cancel on GitHub, or the state didn't match.
+        return RedirectResponse(f"{app_url}/log-in")
+
+    profile = (await oauth.github.get("user", token=token)).json()
+    emails: list[dict[str, Any]] = (await oauth.github.get("user/emails", token=token)).json()
+    email = next((e["email"] for e in emails if e["primary"] and e["verified"]), None)
+
+    user = find_or_create_oauth_user(
+        session,
+        provider="github",
+        provider_account_id=str(profile["id"]),
+        email=email,
+        display_name=profile["name"] or profile["login"],
+        avatar_url=profile.get("avatar_url"),
+    )
+    response = RedirectResponse(app_url)
     set_session_cookie(response, user.id)
+    return response

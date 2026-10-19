@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 import jwt
-import pytest
 from fastapi.testclient import TestClient
 
 from app.config import get_settings
@@ -75,21 +74,3 @@ def test_fresh_token_is_not_renewed(client: TestClient) -> None:
 
     assert response.status_code == 200
     assert "set-cookie" not in response.headers
-
-
-def test_dev_login_is_404_when_turned_off(anonymous_client: TestClient) -> None:
-    assert anonymous_client.post("/api/auth/dev-login").status_code == 404
-    assert anonymous_client.get("/api/users/me").status_code == 401
-
-
-def test_dev_login_logs_you_in_when_turned_on(
-    anonymous_client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(get_settings(), "dev_login_enabled", True)
-
-    response = anonymous_client.post("/api/auth/dev-login")
-
-    assert response.status_code == 204
-    me = anonymous_client.get("/api/users/me")
-    assert me.status_code == 200
-    assert me.json()["email"] == "dev@portal-boards.local"

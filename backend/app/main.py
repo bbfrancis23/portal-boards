@@ -3,21 +3,35 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from sqlalchemy import select
+from starlette.middleware.sessions import SessionMiddleware
 
-from app.config import get_settings, require_jwt_secret
+from app.config import get_settings, require_secret
 from app.db import SessionDep
 from app.routers import auth, boards, portals, templates, widget_data, widgets
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    # Refuse to start with a missing or weak JWT secret. Checked here, not in Settings, so
-    # Alembic and scripts (which read settings but never sign tokens) don't need one.
-    require_jwt_secret(get_settings())
+    # Refuse to start with a missing or weak signing secret. Checked here, not in Settings, so
+    # Alembic and scripts (which read settings but never sign anything) don't need them.
+    # JWT_SECRET signs the pb_session log-in cookie; SESSION_SECRET signs the pb_oauth cookie
+    # that holds the OAuth state (the middleware below reads it at import time, so this is
+    # what catches a missing one).
+    settings = get_settings()
+    require_secret(settings.jwt_secret, "JWT_SECRET")
+    require_secret(settings.session_secret, "SESSION_SECRET")
     yield
 
 
 app = FastAPI(title="portal-boards", lifespan=lifespan)
+settings = get_settings()
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.session_secret.get_secret_value(),
+    session_cookie="pb_oauth",
+    same_site="lax",
+    https_only=settings.app_url.startswith("https"),
+)
 app.include_router(templates.router)
 app.include_router(portals.router)
 app.include_router(boards.routerPortal)

@@ -4,18 +4,18 @@ from typing import Annotated, Any
 import jwt
 from fastapi import Cookie, Depends, HTTPException, Response, status
 
-from app.config import get_settings, require_jwt_secret
+from app.config import get_settings, require_secret
 from app.db import SessionDep
 from app.models import User, utcnow
-
-DEV_EMAIL = "dev@portal-boards.local"
 
 
 def create_session_token(user_id: int) -> str:
     now = utcnow()
     payload = {"sub": str(user_id), "iat": now, "exp": now + timedelta(days=7)}
     # Never sign with a weak key, even if something skipped the startup check.
-    return jwt.encode(payload, require_jwt_secret(get_settings()), algorithm="HS256")
+    return jwt.encode(
+        payload, require_secret(get_settings().jwt_secret, "JWT_SECRET"), algorithm="HS256"
+    )
 
 
 def read_session_token(token: str) -> dict[str, Any] | None:
