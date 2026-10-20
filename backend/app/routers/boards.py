@@ -3,7 +3,7 @@ from sqlalchemy import func, select
 
 from app.auth import CurrentUserDep
 from app.db import SessionDep
-from app.models import Board, Portal
+from app.models import Board
 from app.routers.portals import get_owned_portal
 from app.schemas import BoardCreate, BoardRead, BoardUpdate
 
@@ -13,13 +13,9 @@ routerBoard = APIRouter(prefix="/api/boards/{board_id}", tags=["boards"])
 
 @routerPortal.get("")
 def list_boards(session: SessionDep, user: CurrentUserDep, portal_id: int) -> list[BoardRead]:
-    statement = (
-        select(Board)
-        .where(
-            Board.portal_id == portal_id, Board.portal_id == Portal.id, Portal.owner_id == user.id
-        )
-        .order_by(Board.position)
-    )
+    # 404 for someone else's portal, like every other route (not an empty list).
+    portal = get_owned_portal(session, user, portal_id)
+    statement = select(Board).where(Board.portal_id == portal.id).order_by(Board.position)
     return [BoardRead.model_validate(board) for board in session.scalars(statement)]
 
 

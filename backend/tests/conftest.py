@@ -93,6 +93,18 @@ def other_user(session: Session) -> User:
     return other
 
 
+@pytest.fixture
+def bob_client(session: Session, other_user: User) -> Iterator[TestClient]:
+    """A second browser: an API client logged in as someone else (`other_user`, "Bob")."""
+    app.dependency_overrides[get_session] = lambda: session
+    with TestClient(app) as test_client:
+        test_client.cookies.set(
+            "pb_session", create_session_token(other_user.id), domain="testserver.local"
+        )
+        yield test_client
+    app.dependency_overrides.clear()
+
+
 @pytest.fixture(autouse=True)
 def reset_rate_limits() -> None:
     """Every test starts with fresh rate-limit counts (they're kept in memory between requests)."""
