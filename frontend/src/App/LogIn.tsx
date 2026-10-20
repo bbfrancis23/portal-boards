@@ -1,11 +1,16 @@
 import {Button, Center, Paper, Stack, Title} from "@mantine/core"
 import {IconBrandGithub, IconBrandGoogle} from "@tabler/icons-react"
+import {Navigate} from "react-router"
 
+import {useCurrentUser} from "@/hooks/useCurrentUser"
 import glass from "@/theme/glass.module.css"
 
-// The log-in card (LOOK.md: glass over the ambient background, pill provider buttons).
-// The buttons go nowhere yet; #22 links them to /api/auth/{provider}/login.
 const LogIn = () => {
+  const {data: user} = useCurrentUser()
+
+  // Already logged in: nothing to do here, go straight to the app.
+  if (user) return <Navigate to="/portals" replace />
+
   return (
     <Center pt={64}>
       {/* Paper, not Card: the theme gives every Card the .surface background, which would
@@ -14,10 +19,20 @@ const LogIn = () => {
         <Stack align="center">
           <Title order={2}>Log in to your portals</Title>
           <Stack w="100%" gap="sm" mt="sm">
-            <Button variant="glow" fullWidth leftSection={<IconBrandGithub size={18} />}>
+            <Button
+              component="a"
+              href="/api/auth/github/login"
+              variant="glow"
+              fullWidth
+              leftSection={<IconBrandGithub size={18} />}>
               Continue with GitHub
             </Button>
-            <Button variant="glow" fullWidth leftSection={<IconBrandGoogle size={18} />}>
+            <Button
+              component="a"
+              href="/api/auth/google/login"
+              variant="glow"
+              fullWidth
+              leftSection={<IconBrandGoogle size={18} />}>
               Continue with Google
             </Button>
           </Stack>
