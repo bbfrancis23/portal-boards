@@ -1,0 +1,35 @@
+name: Migrate
+
+# Run by hand: Actions → Migrate → Run workflow. Applies Alembic migrations to the
+# production Turso database (the libSQL dialect doesn't install on Windows, so this runs on Linux).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    name: Migrate production database
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          working-directory: backend
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Apply migrations
+        run: uv run alembic upgrade head
+
+      - name: Show the current revision
+        run: uv run alembic current
