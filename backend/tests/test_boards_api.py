@@ -87,7 +87,7 @@ def test_other_users_boards_are_hidden_and_protected(
     their_board = session.scalar(select(Board).where(Board.portal_id == theirs.id))
     assert their_board is not None
 
-    assert client.get(f"/api/portals/{theirs.id}/boards").json() == []
+    assert client.get(f"/api/portals/{theirs.id}/boards").status_code == 404
     assert client.post(f"/api/portals/{theirs.id}/boards", json={"label": "X"}).status_code == 404
     assert client.patch(f"/api/boards/{their_board.id}", json={"label": "X"}).status_code == 404
     assert client.delete(f"/api/boards/{their_board.id}").status_code == 404
