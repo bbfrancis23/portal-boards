@@ -19,3 +19,7 @@ class PortalRead(BaseModel):
 
 class PortalUpdate(BaseModel):
     name: str = Field(min_length=1)
+
+
+class DefaultPortalUpdate(BaseModel):
+    default_portal_id: int = Field(ge=1)

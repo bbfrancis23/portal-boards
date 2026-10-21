@@ -9,3 +9,4 @@ class UserRead(BaseModel):
     display_name: str
     avatar_url: str | None
     is_guest: bool
+    default_portal_id: int | None

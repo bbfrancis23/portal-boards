@@ -9,6 +9,8 @@ from app.config import get_settings
 from app.db import SessionDep
 from app.oauth import oauth
 from app.rate_limit import AUTH_LIMIT, limiter
+from app.routers.portals import get_owned_portal
+from app.schemas.portal import DefaultPortalUpdate
 from app.schemas.user import UserRead
 from app.services.users_service import find_or_create_oauth_user
 
@@ -17,6 +19,17 @@ router = APIRouter(prefix="/api", tags=["auth", "user"])
 
 @router.get("/users/me")
 def get_user(user: CurrentUserDep) -> UserRead:
+    return UserRead.model_validate(user)
+
+
+@router.put("/users/me/default-portal")
+def set_default_portal(
+    session: SessionDep, user: CurrentUserDep, data: DefaultPortalUpdate
+) -> UserRead:
+    get_owned_portal(session, user, data.default_portal_id)
+    user.default_portal_id = data.default_portal_id
+    session.commit()
+    session.refresh(user)
     return UserRead.model_validate(user)
 
 
