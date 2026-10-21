@@ -20,6 +20,9 @@ import PublicLayout from "./App/Layout/PublicLayout"
 import App from "./App/App"
 import LogIn from "./App/LogIn"
 import {RequireAuth} from "./components/RequireAuth"
+import Portals from "./App/Portals/Portals"
+import BoardPage from "./App/Portals/Board/BoardPage"
+import PortalHome from "./App/Portals/PortalHome"
 
 const queryClient = new QueryClient()
 
@@ -33,14 +36,17 @@ const router = createBrowserRouter([
       {path: "log-in", element: <LogIn />},
     ],
   },
-  // Portal pages (#23 adds :portalId/boards/:boardId). App is a placeholder for now.
   {
     element: <RequireAuth />,
     children: [
       {
         path: "portals",
         element: <AppLayout />,
-        children: [{index: true, element: <App />}],
+        children: [
+          {index: true, element: <Portals />},
+          {path: ":portalId", element: <PortalHome />},
+          {path: ":portalId/boards/:boardId", element: <BoardPage />},
+        ],
       },
     ],
   },

@@ -4,6 +4,7 @@ import {Outlet} from "react-router"
 
 import AppHeader from "@/components/AppHeader/AppHeader"
 import styles from "./AppLayout.module.css"
+import BoardLinks from "@/components/BoardLinks"
 
 const AppLayout = () => {
   const [navbarOpened, navbar] = useDisclosure()
@@ -36,7 +37,7 @@ const AppLayout = () => {
       </AppShell.Header>
 
       <AppShell.Navbar p="md" className={styles.navbar} data-closed={!navbarOpened || undefined}>
-        Navbar
+        <BoardLinks />
       </AppShell.Navbar>
 
       <AppShell.Aside p="md" className={styles.aside} data-closed={!asideOpened || undefined}>
