@@ -7,11 +7,14 @@
       "entrypoint": "app.main:app"
     },
     "frontend": {
-      "root": "frontend/"
+      "root": "frontend/",
+      "framework": "vite"
     }
   },
   "rewrites": [
     {"source": "/api/(.*)", "destination": {"service": "backend"}},
-    {"source": "/(.*)", "destination": {"service": "frontend"}}
+    {"source": "/assets/(.*)", "destination": {"service": "frontend"}},
+    {"source": "/(.*\\.[a-zA-Z0-9]+)", "destination": {"service": "frontend"}},
+    {"source": "/(.*)", "destination": {"service": "frontend", "path": "/index.html"}}
   ]
 }
