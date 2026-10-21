@@ -69,6 +69,9 @@ class User(Base):
     display_name: Mapped[str]
     avatar_url: Mapped[str | None]
     is_guest: Mapped[bool] = mapped_column(default=False)
+    default_portal_id: Mapped[int | None] = mapped_column(
+        ForeignKey("portals.id", ondelete="SET NULL", use_alter=True)
+    )
     expires_at: Mapped[datetime | None]
     created_at: Mapped[datetime] = mapped_column(default=utcnow)
 
