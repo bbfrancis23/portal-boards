@@ -1,0 +1,13 @@
+/* Center modals over the content area, not the whole window. The side panels differ in width
+   (navbar 260px, assistant 320px), so a window-centered modal looked shifted right next to the
+   content. These are the same offsets the content area uses (see App/Layout/AppLayout.module.css):
+   the panel's size plus 24px clearance. Pages or screens without a side panel have an offset of
+   0, so modals there are centered normally. */
+.inner {
+  padding-inline-start: calc(
+    var(--app-shell-navbar-offset, 0rem) + var(--modal-inner-x-offset, var(--modal-x-offset))
+  );
+  padding-inline-end: calc(
+    var(--app-shell-aside-offset, 0rem) + var(--modal-inner-x-offset, var(--modal-x-offset))
+  );
+}

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-labelledby="title">
+  <title id="title">Wellness studio: a lotus in front of a rising sun and soft hills</title>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A77BFF" stop-opacity="0.18" />
+      <stop offset="1" stop-color="#22EEFF" stop-opacity="0.10" />
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFC24B" />
+      <stop offset="1" stop-color="#FF6F91" />
+    </linearGradient>
+    <linearGradient id="hill" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#22EEFF" />
+      <stop offset="1" stop-color="#B8FF3C" />
+    </linearGradient>
+    <linearGradient id="petal" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#22EEFF" />
+      <stop offset="1" stop-color="#A77BFF" />
+    </linearGradient>
+  </defs>
+
+  <!-- Soft sky -->
+  <rect width="320" height="180" fill="url(#sky)" />
+
+  <!-- Rising sun: a ring with a faint glow -->
+  <circle cx="160" cy="92" r="46" fill="#FFC24B" fill-opacity="0.10" />
+  <circle cx="160" cy="92" r="46" fill="none" stroke="url(#sun)" stroke-width="3" />
+
+  <!-- Hills: triangle cutouts with gradient strokes -->
+  <path d="M-10 150 L70 92 L150 150 Z" fill="#22EEFF" fill-opacity="0.08" stroke="url(#hill)" stroke-width="2.5" stroke-linejoin="round" />
+  <path d="M170 150 L250 98 L330 150 Z" fill="#B8FF3C" fill-opacity="0.08" stroke="url(#hill)" stroke-width="2.5" stroke-linejoin="round" />
+
+  <!-- Water line -->
+  <path d="M0 150 H320" stroke="url(#hill)" stroke-width="2" stroke-linecap="round" opacity="0.7" />
+  <path d="M40 162 H120 M200 162 H280" stroke="#22EEFF" stroke-width="1.5" stroke-linecap="round" opacity="0.45" />
+  <path d="M95 172 H225" stroke="#22EEFF" stroke-width="1.5" stroke-linecap="round" opacity="0.3" />
+
+  <!-- Lotus: five petals, outlined -->
+  <g fill="#ffffff" fill-opacity="0.35" stroke="url(#petal)" stroke-width="2.5" stroke-linejoin="round">
+    <path d="M160 150 C140 128 142 104 160 86 C178 104 180 128 160 150 Z" />
+    <path d="M160 150 C134 140 122 120 126 98 C146 104 158 124 160 150 Z" />
+    <path d="M160 150 C186 140 198 120 194 98 C174 104 162 124 160 150 Z" />
+    <path d="M160 150 C128 150 110 138 104 120 C126 118 146 130 160 150 Z" />
+    <path d="M160 150 C192 150 210 138 216 120 C194 118 174 130 160 150 Z" />
+  </g>
+
+  <!-- A few floating dots -->
+  <circle cx="58" cy="44" r="3" fill="#A77BFF" opacity="0.6" />
+  <circle cx="262" cy="38" r="2.5" fill="#22EEFF" opacity="0.7" />
+  <circle cx="284" cy="64" r="2" fill="#B8FF3C" opacity="0.8" />
+  <circle cx="36" cy="76" r="2" fill="#22EEFF" opacity="0.6" />
+</svg>

@@ -172,6 +172,10 @@ Since 2026-10-18 the roadmap is organized **by feature**: each milestone mixes b
 10. **AI assistant**: Anthropic client, personas per board, advice, assistant chat and panel, conversation persistence, agent tools and loop, undo, AI tests.
 11. **Polish**: contrast, performance and browser verification.
 
+## Open questions (decide later)
+- **Delete or archive?** Deleting a portal (or dashboard) is a real delete today: the row and everything beneath it (dashboards, widgets, data rows) are removed through cascades, with only a confirm dialog as protection. A portal is a whole business's data, so before real users arrive, decide whether to switch to a **soft delete**: an `archived_at` column hidden from every query, a "Recently deleted" list to restore from, and a cleanup job that removes items for good after about 30 days. Raised 2026-10-24 while building delete in #26.
+- **Preview environment.** PR previews share the production database and can't log in (the OAuth callbacks only point at production), so new pages can only be fully checked on production after merging. Consider a separate preview database and preview-friendly log-in.
+
 ## Verification
 - `uv run pytest`: CRUD + owner scoping (user → portal → board → widget), create-portal-from-template copies every board, widget and data row with references resolved, cascading deletes, guest expiry, auth flows with mocked Authlib, AI tools with a mocked Anthropic client. CI repeats on `sqlite+libsql:///test.db`.
 - `pnpm test && pnpm build`; CI green.
