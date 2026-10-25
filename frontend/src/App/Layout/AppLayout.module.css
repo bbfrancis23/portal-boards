@@ -13,6 +13,7 @@
   bottom: 12px;
   height: auto;
   top: calc(var(--app-shell-header-offset) + 24px);
+  overflow-y: auto; /* a long dashboard list scrolls inside the panel */
 }
 
 .aside {
@@ -22,6 +23,48 @@
   bottom: 12px;
   height: auto;
   top: calc(var(--app-shell-header-offset) + 24px);
+  overflow-y: auto; /* a long chat scrolls inside the panel */
+}
+
+/* The middle content area is its own scroll box, pinned between the header and side panels,
+   so the browser window itself never scrolls (no page scrollbar). That also stops the header
+   and aside from shifting when a modal locks page scrolling. Added in #26.
+   To roll back: delete the .main rules (including the media queries and the html rule below),
+   the two `overflow-y` lines above, and
+   `className={styles.main}` on AppShell.Main in AppLayout.tsx and PublicLayout.tsx, and
+   `lockScroll: false` on Modal and Drawer in theme/theme.ts. */
+.main {
+  /* The floating panels sit 12px in from the window edges, so the content area clears each one
+     by its size plus 12px inset plus a 12px gap. Its scrollbar is then never under a panel. */
+  --panel-clearance: 24px;
+  position: fixed;
+  top: calc(var(--app-shell-header-offset, 0rem) + var(--panel-clearance));
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: 0;
+  padding: 0 var(--app-shell-padding) var(--app-shell-padding);
+  overflow-y: auto;
+}
+
+/* Side panels only take space once they're shown beside the content (sm for the navbar, md for
+   the aside); below that they open over it, so the content keeps the full width. */
+@media (min-width: 48em) {
+  .main {
+    left: calc(var(--app-shell-navbar-offset, 0rem) + var(--panel-clearance));
+  }
+}
+
+@media (min-width: 62em) {
+  .main {
+    right: calc(var(--app-shell-aside-offset, 0rem) + var(--panel-clearance));
+  }
+}
+
+/* Belt and braces: on pages with the app shell, the window itself never scrolls, so a modal's
+   scroll lock has no scrollbar to hide and nothing shifts. Other pages (the styleguide) still do. */
+:global(html):has(.main) {
+  overflow: hidden;
 }
 
 /* Below a panel's breakpoint Mantine makes it full width and slides it off screen by its own

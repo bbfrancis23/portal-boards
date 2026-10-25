@@ -12,7 +12,7 @@ const PublicLayout = () => {
         <AppHeader />
       </AppShell.Header>
 
-      <AppShell.Main>
+      <AppShell.Main className={styles.main}>
         <Outlet />
       </AppShell.Main>
     </AppShell>
