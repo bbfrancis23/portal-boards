@@ -15,6 +15,7 @@ import {
   TextInput,
   Tooltip,
   Modal,
+  NavLink,
   Drawer,
   Menu,
   Popover,
@@ -22,6 +23,7 @@ import {
 } from "@mantine/core"
 
 import buttonClasses from "./Button.module.css"
+import modalClasses from "./Modal.module.css"
 import numberInputClasses from "./NumberInput.module.css"
 import tableOfContentsClasses from "./TableOfContents.module.css"
 import glassClasses from "./glass.module.css"
@@ -139,6 +141,9 @@ export const theme = createTheme({
       classNames: {root: glassClasses.surface},
     }),
     Chip: Chip.extend({defaultProps: {radius: "xl"}}),
+    // Pill-shaped nav items (LOOK.md: controls are full pills), so the hover and active
+    // highlight are rounded too. #82 adds the rainbow active bar on top.
+    NavLink: NavLink.extend({styles: {root: {borderRadius: "var(--mantine-radius-xl)"}}}),
     NumberInput: NumberInput.extend({
       defaultProps: {radius: "xl", rightSectionWidth: rem(40)},
       classNames: {controls: numberInputClasses.controls, control: numberInputClasses.control},
@@ -151,7 +156,10 @@ export const theme = createTheme({
     Textarea: Textarea.extend({defaultProps: {radius: "xl"}}),
     TextInput: TextInput.extend({defaultProps: {radius: "xl"}}),
     Modal: Modal.extend({
-      classNames: {content: `${glassClasses.glass} ${glassClasses.positioned}`},
+      classNames: {
+        content: `${glassClasses.glass} ${glassClasses.positioned}`,
+        inner: modalClasses.inner,
+      },
       defaultProps: {
         // The app's window never scrolls (only the content area does, see AppLayout.module.css),
         // so there's nothing to lock, and locking shifted the header and assistant panel.

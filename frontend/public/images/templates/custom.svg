@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-labelledby="title">
+  <title id="title">Custom portal: an empty portal ring with a plus, and shapes waiting to be placed</title>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22EEFF" stop-opacity="0.10" />
+      <stop offset="1" stop-color="#A77BFF" stop-opacity="0.16" />
+    </linearGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22EEFF" />
+      <stop offset="0.5" stop-color="#B8FF3C" />
+      <stop offset="1" stop-color="#A77BFF" />
+    </linearGradient>
+    <linearGradient id="plus" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22EEFF" />
+      <stop offset="1" stop-color="#A77BFF" />
+    </linearGradient>
+  </defs>
+
+  <!-- Soft background -->
+  <rect width="320" height="180" fill="url(#sky)" />
+
+  <!-- Dotted grid: an empty canvas to build on -->
+  <g fill="#A77BFF" opacity="0.25">
+    <circle cx="40" cy="30" r="1.5" /><circle cx="80" cy="30" r="1.5" /><circle cx="240" cy="30" r="1.5" /><circle cx="280" cy="30" r="1.5" />
+    <circle cx="40" cy="150" r="1.5" /><circle cx="80" cy="150" r="1.5" /><circle cx="240" cy="150" r="1.5" /><circle cx="280" cy="150" r="1.5" />
+    <circle cx="20" cy="90" r="1.5" /><circle cx="300" cy="90" r="1.5" />
+  </g>
+
+  <!-- The portal: a dashed ring (not yet filled in), with a plus in the middle -->
+  <circle cx="160" cy="90" r="50" fill="#ffffff" fill-opacity="0.30" />
+  <circle cx="160" cy="90" r="50" fill="none" stroke="url(#ring)" stroke-width="3" stroke-dasharray="10 7" stroke-linecap="round" />
+  <path d="M160 70 V110 M140 90 H180" stroke="url(#plus)" stroke-width="4" stroke-linecap="round" />
+
+  <!-- Shapes waiting to be placed: future widgets -->
+  <rect x="44" y="56" width="44" height="30" rx="7" fill="#22EEFF" fill-opacity="0.10" stroke="#22EEFF" stroke-width="2" transform="rotate(-8 66 71)" />
+  <circle cx="74" cy="122" r="14" fill="#B8FF3C" fill-opacity="0.12" stroke="#7FD400" stroke-width="2" />
+  <path d="M244 58 L266 96 L222 96 Z" fill="#A77BFF" fill-opacity="0.10" stroke="#A77BFF" stroke-width="2" stroke-linejoin="round" />
+  <rect x="234" y="112" width="40" height="24" rx="6" fill="#FFC24B" fill-opacity="0.10" stroke="#FFB020" stroke-width="2" transform="rotate(6 254 124)" />
+
+  <!-- Faint paths from the shapes toward the portal -->
+  <g stroke="url(#plus)" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 6" opacity="0.5" fill="none">
+    <path d="M92 74 Q110 80 112 86" />
+    <path d="M90 118 Q104 108 114 104" />
+    <path d="M222 84 Q212 86 208 88" />
+    <path d="M232 120 Q218 112 206 106" />
+  </g>
+</svg>
