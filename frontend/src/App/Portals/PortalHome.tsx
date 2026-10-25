@@ -1,13 +1,14 @@
 import {Center, Loader, Text} from "@mantine/core"
-import {Navigate, useParams} from "react-router"
+import {Navigate} from "react-router"
 
 import {useBoards} from "@/hooks/useBoards"
+import {useNumberIds} from "@/hooks/useNumberIds"
 
 // /portals/:portalId has no page of its own: it forwards to the portal's first dashboard,
 // replacing the URL so the board's address is what gets bookmarked.
 const PortalHome = () => {
-  const {portalId} = useParams()
-  const {data: boards, isPending} = useBoards(Number(portalId))
+  const {portalId} = useNumberIds()
+  const {data: boards, isPending} = useBoards(portalId)
 
   if (isPending)
     return (

@@ -34,7 +34,7 @@ const EditPortalModal = ({opened, onClose, portalId}: EditPortalModalProps) => {
 
   const save = (values: {name: string}) =>
     editPortal.mutate(
-      {name: values.name, portalId: portalId},
+      {name: values.name.trim(), portalId: portalId},
       {
         onSuccess: () => {
           close()

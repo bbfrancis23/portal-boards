@@ -26,7 +26,7 @@ const NewBoardModal = ({opened, onClose, portalId}: NewBoardModalProps) => {
 
   const create = (values: {label: string}) =>
     createBoard.mutate(
-      {portalId, label: values.label},
+      {portalId, label: values.label.trim()},
       {
         // The new dashboard comes back here, so we can go straight to it.
         onSuccess: (board) => {
