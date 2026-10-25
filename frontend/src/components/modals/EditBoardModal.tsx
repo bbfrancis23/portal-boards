@@ -32,7 +32,7 @@ const EditBoardModal = ({opened, onClose}: EditBoardModalProps) => {
 
   const save = (values: {label: string}) => {
     if (!board) return // the modal only opens on a dashboard, so this just satisfies TypeScript
-    editBoard.mutate({boardId: board.id, label: values.label}, {onSuccess: close})
+    editBoard.mutate({boardId: board.id, label: values.label.trim()}, {onSuccess: close})
   }
 
   // Swap this modal for the delete confirmation, rather than stacking one on top of the other.

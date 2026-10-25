@@ -32,7 +32,12 @@ const BoardPage = () => {
             </Group>
             <Text>Widgets coming soon.</Text>
           </Stack>
-          <EditBoardModal key={boardId} opened={opened} onClose={modal.close} />
+          {/* The label is part of the key: after a rename the modal starts at the new label. */}
+          <EditBoardModal
+            key={`${board.id}-${board.label}`}
+            opened={opened}
+            onClose={modal.close}
+          />
         </>
       )}
     </>

@@ -1,16 +1,18 @@
 import {useBoards} from "@/hooks/useBoards"
 import {Button, Group, NavLink, Title} from "@mantine/core"
-import {Link, useParams} from "react-router"
+import {Link} from "react-router"
 import IconDashboard from "@/components/icons/IconDashboard"
 import NewBoardModal from "./modals/NewBoardModal"
 import {useDisclosure} from "@mantine/hooks"
+import {useNumberIds} from "@/hooks/useNumberIds"
 
 const BoardLinks = () => {
-  const {portalId, boardId} = useParams()
-  const {data: boards, isPending} = useBoards(Number(portalId))
+  // undefined on /portals (no portal in the URL), so useBoards doesn't fetch there.
+  const {portalId, boardId} = useNumberIds()
+  const {data: boards, isPending} = useBoards(portalId)
   // Hooks must run on every render, in the same order, so they all come before this return.
   const [opened, modal] = useDisclosure(false)
-  if (!portalId) return null
+  if (portalId === undefined) return null
 
   return (
     <>
@@ -28,13 +30,13 @@ const BoardLinks = () => {
             component={Link}
             to={`/portals/${portalId}/boards/${board.id}`}
             label={board.label}
-            active={board.id === Number(boardId)}
+            active={board.id === boardId}
           />
         ))}
       <Button mt="md" onClick={modal.open}>
         New DashBoard
       </Button>
-      <NewBoardModal opened={opened} onClose={modal.close} portalId={Number(portalId)} />
+      <NewBoardModal opened={opened} onClose={modal.close} portalId={portalId} />
     </>
   )
 }

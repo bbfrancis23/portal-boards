@@ -31,7 +31,7 @@ const NewPortalModal = ({opened, onClose}: NewPortalModalProps) => {
   const create = (templateId: string | null) =>
     form.onSubmit((values) =>
       createPortal.mutate(
-        {name: values.name, template_id: templateId},
+        {name: values.name.trim(), template_id: templateId},
         {
           onSuccess: (portal) => {
             close()

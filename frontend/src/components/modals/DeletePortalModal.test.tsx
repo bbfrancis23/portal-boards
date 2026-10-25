@@ -30,3 +30,13 @@ test("typing the exact name enables it", async () => {
   fireEvent.change(confirmField(), {target: {value: "Downtown Studio"}})
   expect(deleteButton()).toBeEnabled()
 })
+
+test("a name saved with a trailing space can still be confirmed", async () => {
+  renderWithProviders(
+    <DeletePortalModal opened onClose={() => {}} portalId={1} portalName="My portal " />,
+  )
+  fireEvent.change(await screen.findByLabelText('Type "My portal " to confirm'), {
+    target: {value: "My portal"},
+  })
+  expect(screen.getByRole("button", {name: "Delete portal"})).toBeEnabled()
+})

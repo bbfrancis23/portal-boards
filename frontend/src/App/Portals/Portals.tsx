@@ -124,8 +124,10 @@ const Portals = () => {
       </Stack>
       <NewPortalModal opened={opened} onClose={modal.close} />
       {portalId && (
+        // The name is part of the key: after a rename the modal starts fresh, so its field (and
+        // isDirty) begin at the new name, not the one it had when it first opened.
         <EditPortalModal
-          key={portalId}
+          key={`${portalId}-${portals?.find((p) => p.id === portalId)?.name}`}
           opened={editOpened}
           onClose={editModal.close}
           portalId={portalId}

@@ -22,7 +22,8 @@ const DeletePortalModal = ({opened, onClose, portalId, portalName}: DeletePortal
     onClose()
   }
 
-  const confirmed = typed.trim() === portalName
+  // Both sides trimmed: portals saved before names were trimmed may end in a space.
+  const confirmed = typed.trim() === portalName.trim()
 
   return (
     <Modal opened={opened} onClose={close} title={`Delete "${portalName}"?`}>
