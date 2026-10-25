@@ -44,7 +44,7 @@ const AppLayout = () => {
         Assistant
       </AppShell.Aside>
 
-      <AppShell.Main>
+      <AppShell.Main className={styles.main}>
         <Outlet />
       </AppShell.Main>
     </AppShell>

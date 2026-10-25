@@ -153,6 +153,9 @@ export const theme = createTheme({
     Modal: Modal.extend({
       classNames: {content: `${glassClasses.glass} ${glassClasses.positioned}`},
       defaultProps: {
+        // The app's window never scrolls (only the content area does, see AppLayout.module.css),
+        // so there's nothing to lock, and locking shifted the header and assistant panel.
+        lockScroll: false,
         shadow: "lg",
         radius: "lg",
         overlayProps: {color: "var(--pb-silver)", backgroundOpacity: 0.3},
@@ -161,6 +164,9 @@ export const theme = createTheme({
     Drawer: Drawer.extend({
       classNames: {content: `${glassClasses.glass} ${glassClasses.positioned}`},
       defaultProps: {
+        // The app's window never scrolls (only the content area does, see AppLayout.module.css),
+        // so there's nothing to lock, and locking shifted the header and assistant panel.
+        lockScroll: false,
         shadow: "lg",
         radius: "lg",
         overlayProps: {color: "var(--pb-silver)", backgroundOpacity: 0.3},
