@@ -3,22 +3,22 @@ name = "portal-boards-backend"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
-    "alembic>=1.20.0",
+    "alembic>=1.20.1",
     "authlib>=1.9.1",
     "fastapi[standard]>=0.142.2",
     "itsdangerous>=2.2.0",
-    "pydantic-settings>=2.15.0",
+    "pydantic-settings>=2.16.2",
     "pyjwt>=2.15.1",
     "slowapi>=0.1.10",
-    "sqlalchemy>=2.0.54",
+    "sqlalchemy>=2.1.6",
     "sqlalchemy-libsql>=0.2.0 ; sys_platform != 'win32'",
 ]
 
 [dependency-groups]
 dev = [
-    "httpx2>=2.13.1",
-    "pytest>=9.1.1",
-    "ruff>=0.16.10",
+    "httpx2>=2.16.0",
+    "pytest>=9.2.0",
+    "ruff>=0.17.3",
 ]
 
 [tool.ruff]
