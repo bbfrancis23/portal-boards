@@ -9,7 +9,7 @@ export const RequireAuth = () => {
   if (isPending)
     return (
       <Center mih="50vh">
-        <Loader />
+        <Loader type="dots" size="lg" />
       </Center>
     )
   if (!user) return <Navigate to="/log-in" replace />

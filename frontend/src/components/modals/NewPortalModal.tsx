@@ -2,7 +2,7 @@ import {Alert, Button, Card, Group, Image, Modal, Stack, Text, TextInput} from "
 import {hasLength, useForm} from "@mantine/form"
 import {useNavigate} from "react-router"
 
-import {useCreatePortal} from "@/hooks/useCreatePortal"
+import {useCreatePortal} from "@/hooks/portal/useCreatePortal"
 import {useTemplates} from "@/hooks/useTemplates"
 
 type NewPortalModalProps = {

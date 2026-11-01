@@ -2,7 +2,7 @@ import {Alert, Button, Modal, Stack, TextInput} from "@mantine/core"
 import {hasLength, useForm} from "@mantine/form"
 import {useNavigate} from "react-router"
 
-import {useCreateBoard} from "@/hooks/useCreateBoard"
+import {useCreateBoard} from "@/hooks/board/useCreateBoard"
 
 type NewBoardModalProps = {
   opened: boolean

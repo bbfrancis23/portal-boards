@@ -1,7 +1,7 @@
 import {Alert, Button, Group, Modal, Stack, Text, TextInput} from "@mantine/core"
 import {useState} from "react"
 
-import {useDeletePortal} from "@/hooks/useDeletePortal"
+import {useDeletePortal} from "@/hooks/portal/useDeletePortal"
 
 type DeletePortalModalProps = {
   opened: boolean

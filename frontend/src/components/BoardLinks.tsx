@@ -1,4 +1,4 @@
-import {useBoards} from "@/hooks/useBoards"
+import {useBoards} from "@/hooks/board/useBoards"
 import {Button, Group, NavLink, Title} from "@mantine/core"
 import {Link} from "react-router"
 import IconDashboard from "@/components/icons/IconDashboard"

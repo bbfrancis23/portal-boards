@@ -1,7 +1,6 @@
+import {useDeleteBoard} from "@/hooks/board/useDeleteBoard"
 import {Alert, Button, Group, Modal, Stack, Text} from "@mantine/core"
 import {useNavigate} from "react-router"
-
-import {useDeleteBoard} from "@/hooks/useDeleteBoard"
 
 type DeleteBoardModalProps = {
   opened: boolean
