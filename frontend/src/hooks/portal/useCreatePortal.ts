@@ -1,7 +1,7 @@
 import {useMutation, useQueryClient} from "@tanstack/react-query"
 
 import {api} from "@/api/client"
-import type {Portal} from "@/hooks/usePortals"
+import type {Portal} from "@/hooks/portal/usePortals"
 
 type NewPortal = {name: string; template_id: string | null}
 

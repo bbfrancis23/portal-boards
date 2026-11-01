@@ -1,8 +1,8 @@
 import {Button, Divider, Modal, Stack, TextInput} from "@mantine/core"
 import {useDisclosure} from "@mantine/hooks"
-import {usePortals} from "@/hooks/usePortals"
+import {usePortals} from "@/hooks/portal/usePortals"
 import {hasLength, useForm} from "@mantine/form"
-import {useEditPortal} from "@/hooks/useEditPortal"
+import {useEditPortal} from "@/hooks/portal/useEditPortal"
 import DeletePortalModal from "@/components/modals/DeletePortalModal"
 
 type EditPortalModalProps = {

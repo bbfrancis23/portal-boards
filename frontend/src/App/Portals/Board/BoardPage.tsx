@@ -1,9 +1,10 @@
-import {useBoards, type Board} from "@/hooks/useBoards"
-import {Skeleton, Stack, Title, Text, ActionIcon, Group} from "@mantine/core"
+import {useBoards, type Board} from "@/hooks/board/useBoards"
+import {Skeleton, Stack, Title, ActionIcon, Group} from "@mantine/core"
 import {IconEdit} from "@tabler/icons-react"
 import EditBoardModal from "@/components/modals/EditBoardModal"
 import {useDisclosure} from "@mantine/hooks"
 import {useNumberIds} from "@/hooks/useNumberIds"
+import DashboardCanvas from "@/components/dash-boards/DashboardCanvas"
 
 const BoardPage = () => {
   const {portalId, boardId} = useNumberIds()
@@ -30,7 +31,7 @@ const BoardPage = () => {
                 <IconEdit />
               </ActionIcon>
             </Group>
-            <Text>Widgets coming soon.</Text>
+            <DashboardCanvas />
           </Stack>
           {/* The label is part of the key: after a rename the modal starts at the new label. */}
           <EditBoardModal

@@ -1,7 +1,7 @@
 import {Button, Divider, Modal, Stack, TextInput} from "@mantine/core"
 import {hasLength, useForm} from "@mantine/form"
-import {useBoards} from "@/hooks/useBoards"
-import {useEditBoard} from "@/hooks/useEditBoard"
+import {useBoards} from "@/hooks/board/useBoards"
+import {useEditBoard} from "@/hooks/board/useEditBoard"
 import {useNumberIds} from "@/hooks/useNumberIds"
 import {useDisclosure} from "@mantine/hooks"
 

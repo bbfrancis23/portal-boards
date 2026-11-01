@@ -1,6 +1,6 @@
 import EditPortalModal from "@/components/modals/EditPortalModal"
 import NewPortalModal from "@/components/modals/NewPortalModal"
-import {usePortals} from "@/hooks/usePortals"
+import {usePortals} from "@/hooks/portal/usePortals"
 import {useTemplates} from "@/hooks/useTemplates"
 import {
   ActionIcon,

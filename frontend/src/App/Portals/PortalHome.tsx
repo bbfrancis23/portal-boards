@@ -1,7 +1,7 @@
 import {Center, Loader, Text} from "@mantine/core"
 import {Navigate} from "react-router"
 
-import {useBoards} from "@/hooks/useBoards"
+import {useBoards} from "@/hooks/board/useBoards"
 import {useNumberIds} from "@/hooks/useNumberIds"
 
 // /portals/:portalId has no page of its own: it forwards to the portal's first dashboard,
@@ -13,7 +13,7 @@ const PortalHome = () => {
   if (isPending)
     return (
       <Center mih="50vh">
-        <Loader />
+        <Loader type="dots" size="lg" />
       </Center>
     )
 
