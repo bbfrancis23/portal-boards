@@ -1,16 +1,17 @@
 import PlaceholderWidget from "./PlaceholderWidget"
+import StatWidget from "./StatWidget"
 import TableWidget from "./table-widget/TableWidget"
 import {widgetRegistry} from "./widget-registry"
 import type {WidgetDefinition} from "./widget-types"
 
-// Tables are real; the rest are placeholders until #21 and later issues replace them
+// Stats and tables are real; the rest are placeholders until later issues replace them
 const definitions: WidgetDefinition[] = [
   {
     type: "stat",
     kind: "output",
     label: "Stat",
     defaultSize: {w: 3, h: 2},
-    component: PlaceholderWidget,
+    component: StatWidget,
   },
   {
     type: "chart",
