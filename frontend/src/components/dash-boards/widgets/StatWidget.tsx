@@ -12,7 +12,11 @@ type StatConfig = {
 
 const formatValue = (value: number, format: StatConfig["format"]) =>
   format === "currency"
-    ? value.toLocaleString(undefined, {style: "currency", currency: "USD", maximumFractionDigits: 0})
+    ? value.toLocaleString(undefined, {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
+      })
     : value.toLocaleString()
 
 const signed = (change: number, text: string) => `${change > 0 ? "+" : "−"}${text}`
