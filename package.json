@@ -6,7 +6,7 @@
     "dev": "concurrently -k -n api,web -c blue,green \"uv run --directory backend fastapi dev app/main.py\" \"pnpm --dir frontend dev\""
   },
   "devDependencies": {
-    "concurrently": "^10.0.5"
+    "concurrently": "^10.0.6"
   },
   "engines": {
     "node": ">=22"
