@@ -44,7 +44,8 @@ app.include_router(boards.routerPortal)
 app.include_router(boards.routerBoard)
 app.include_router(widgets.routerBoard)
 app.include_router(widgets.routerWidget)
-app.include_router(widget_data.router)
+app.include_router(widget_data.routerBoard)
+app.include_router(widget_data.routerWidget)
 app.include_router(auth.router)
 
 

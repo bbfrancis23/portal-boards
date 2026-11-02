@@ -8,7 +8,7 @@ import "react-grid-layout/css/styles.css"
 import {Alert, SimpleGrid, Skeleton, Text} from "@mantine/core"
 import WidgetShell from "./widgets/WidgetShell"
 import {widgetRegistry} from "./widgets/widget-registry"
-import {useWidgets} from "@/hooks/useWidgets"
+import {useWidgets} from "@/hooks/widgets/useWidgets"
 import {useNumberIds} from "@/hooks/useNumberIds"
 import {useSaveLayout} from "@/hooks/useSaveLayout"
 

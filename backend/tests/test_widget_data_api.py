@@ -32,6 +32,31 @@ def test_list_widget_data_in_id_order(client: TestClient, session: Session, dev_
     assert ids == sorted(ids)
 
 
+def test_list_widget_data_by_widget_id_alone(
+    client: TestClient, session: Session, dev_user: User
+) -> None:
+    widget = widget_with_rows(session, dev_user)
+    board_id, widget_id = widget.board_id, widget.id
+
+    by_board = client.get(f"/api/boards/{board_id}/widgets/{widget_id}/data").json()
+    response = client.get(f"/api/widgets/{widget_id}/data")
+
+    assert response.status_code == 200
+    assert response.json() == by_board
+
+
+def test_widget_data_by_id_for_an_imaginary_widget_is_404(client: TestClient) -> None:
+    assert client.get("/api/widgets/666/data").status_code == 404
+
+
+def test_other_users_widget_data_by_id_is_404(
+    session: Session, other_user: User, client: TestClient
+) -> None:
+    widget = widget_with_rows(session, other_user)
+
+    assert client.get(f"/api/widgets/{widget.id}/data").status_code == 404
+
+
 def test_create_widget_data_appends_a_row(
     client: TestClient, session: Session, dev_user: User
 ) -> None:

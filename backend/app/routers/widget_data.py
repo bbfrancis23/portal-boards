@@ -12,7 +12,11 @@ from app.schemas.widget import WidgetDataCreate, WidgetDataRead, WidgetType
 # Only these widgets keep their own rows. Charts and stats get their numbers from them.
 INPUT_TYPES = {WidgetType.TABLE, WidgetType.SCHEDULE, WidgetType.FORM}
 
-router = APIRouter(prefix="/api/boards/{board_id}/widgets/{widget_id}/data", tags=["widget data"])
+routerBoard = APIRouter(
+    prefix="/api/boards/{board_id}/widgets/{widget_id}/data", tags=["widget data"]
+)
+# By widget id alone: a stat or chart reads a table that may sit on another board.
+routerWidget = APIRouter(prefix="/api/widgets/{widget_id}/data", tags=["widget data"])
 
 
 def get_owned_widget(
@@ -30,11 +34,21 @@ def get_owned_widget(
     return widget
 
 
+def get_owned_widget_by_id(
+    session: SessionDep, user: CurrentUserDep, widget_id: int
+) -> WidgetInstance:
+    widget = session.get(WidgetInstance, widget_id)
+    if widget is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Widget not found")
+    get_owned_board(session, user, widget.board_id)
+    return widget
+
+
 OwnedWidgetDep = Annotated[WidgetInstance, Depends(get_owned_widget)]
+OwnedWidgetByIdDep = Annotated[WidgetInstance, Depends(get_owned_widget_by_id)]
 
 
-@router.get("")
-def list_widget_data(widget: OwnedWidgetDep, session: SessionDep) -> list[WidgetDataRead]:
+def rows_in_id_order(session: SessionDep, widget: WidgetInstance) -> list[WidgetDataRead]:
     statement = (
         select(WidgetData).where(WidgetData.widget_instance_id == widget.id).order_by(WidgetData.id)
     )
@@ -43,7 +57,19 @@ def list_widget_data(widget: OwnedWidgetDep, session: SessionDep) -> list[Widget
     ]
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@routerBoard.get("")
+def list_widget_data(widget: OwnedWidgetDep, session: SessionDep) -> list[WidgetDataRead]:
+    return rows_in_id_order(session, widget)
+
+
+@routerWidget.get("")
+def list_widget_data_by_widget_id(
+    widget: OwnedWidgetByIdDep, session: SessionDep
+) -> list[WidgetDataRead]:
+    return rows_in_id_order(session, widget)
+
+
+@routerBoard.post("", status_code=status.HTTP_201_CREATED)
 def create_widget_data(
     widget: OwnedWidgetDep, session: SessionDep, body: WidgetDataCreate
 ) -> WidgetDataRead:
