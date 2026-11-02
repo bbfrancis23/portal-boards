@@ -27,18 +27,18 @@
 ## Reuse from compass-boards (copy files, fresh history; first commit notes source `compass-boards@1ff0cb0`)
 **Copy as-is → `frontend/src/`**
 - `lib/widget-types.ts`, `lib/board-types.ts` (drop `buildAdvicePrompt` from the TS type; prompts move to Python personas), `lib/widget-registry.ts`, `lib/widget-shell.tsx`, `lib/widget-data-bus.tsx`
-- `widgets/advice.ts` registration. The `widgets/financial/**` and `widgets/fitness/**` registrations are **not** copied; they serve as reference for the generic widgets in M5.
+- The `widgets/financial/**` and `widgets/fitness/**` registrations are **not** copied; they serve as reference for the generic widgets in M5. `widgets/advice.ts` isn't copied either: advice moved into the assistant (#32, #127).
 - `postcss.config.mjs` (done in #3)
 - *Not copied:* `boards/*.board.ts` and `boards/index.ts` (financial/fitness board configs). Board configs now come from backend templates.
 
 **Port with small edits (server actions → TanStack Query + fetch)**
-- `lib/dashboard-canvas.tsx` (`updateWidgetLayout` → `PATCH` mutation), `lib/form-widget.tsx` (`addWidgetData` → `POST`), `lib/line-chart-widget.tsx`, `lib/advice-widget.tsx`, `lib/use-widget-data.ts`, `lib/use-board-advice.ts`
+- `lib/dashboard-canvas.tsx` (`updateWidgetLayout` → `PATCH` mutation), `lib/form-widget.tsx` (`addWidgetData` → `POST`), `lib/line-chart-widget.tsx`, `lib/use-widget-data.ts`
 - `app/(app)/board-nav.tsx` (`next/link` → react-router `Link`)
 - `app/layout.tsx` provider setup → `main.tsx`; `app/register-widgets.tsx` → plain imports in `main.tsx`
 
 **Rewrite in Python → `backend/app/`**
 - `db/schema.ts` (Drizzle) → SQLAlchemy 2.0 models (`app/models.py`)
-- `lib/board-queries.ts`, `widget-queries.ts`, `widget-data-queries.ts`, `widget-actions.ts`, `widget-data-actions.ts`, `advice-actions.ts` → services + FastAPI routers
+- `lib/board-queries.ts`, `widget-queries.ts`, `widget-data-queries.ts`, `widget-actions.ts`, `widget-data-actions.ts` → services + FastAPI routers (`advice-actions.ts` becomes the assistant's suggested prompts and opening note, #32)
 - `lib/demo-seed.ts` + `db/seed.ts` → `app/templates/` (the wellness studio template and its sample-data generator; compass's seeding approach is the reference, its financial/fitness data is not reused)
 - `boards/*.board.ts` `buildAdvicePrompt` → per-template persona prompts in `app/ai/personas.py`
 - `lib/require-session.ts` + Auth.js → `get_current_user` dependency
@@ -68,7 +68,7 @@ All foreign keys use `ON DELETE CASCADE` (SQLite `foreign_keys=ON`), so deleting
 - **stat**: a single value with an optional delta (`compare: previous_period`) and sparkline: `{title, format, compare?, source}` (renamed from "metric").
 - **table**: `data-table` input widget (generic rows, CSV paste).
 - **schedule** *(new)*: a week view of classes and appointments: days as columns, time slots as rows, entries as blocks. Rows live in its own `WidgetData` (`{title, start, end, kind, ...}`).
-- **form**: compass's `form-widget` and **advice** stay available.
+- **form**: compass's `form-widget` stays available. (The advice widget was dropped in #127: advice lives in the assistant, #32.)
 - Backend Pydantic schemas per widget type validate config for both the API and agent tools.
 
 Every query is scoped to the current user through `Portal.owner_id` (compass's "widget belongs to board" check is kept, extended to "board belongs to portal belongs to user"). Sync `def` endpoints; async AI endpoints do DB work via `run_in_threadpool`.
@@ -84,7 +84,6 @@ Every query is scoped to the current user through `Portal.owner_id` (compass's "
 | `POST /boards/{id}/widgets`, `PATCH/DELETE /widgets/{wid}` | new (`WidgetShell.onRemove` gets wired) |
 | `PATCH /boards/{id}/layout` `[{id,x,y,w,h}]` | `updateWidgetLayout` |
 | `GET/POST /boards/{id}/widgets/{wid}/data` | `getWidgetData` / `addWidgetData` |
-| `POST /boards/{id}/advice` (SSE) | `getBoardAdvice` |
 | `POST /boards/{id}/chat` (SSE; `agent: bool`) | new |
 | `GET /auth/{provider}/login`, `GET /auth/{provider}/callback`, `POST /auth/logout`, `GET /users/me` | Auth.js |
 
@@ -99,7 +98,7 @@ Every query is scoped to the current user through `Portal.owner_id` (compass's "
 Shared: `AsyncAnthropic()`, `model=settings.CLAUDE_MODEL` (default `claude-sonnet-5-5`), `thinking={"type":"adaptive"}`, explicit `output_config.effort` per feature. Sonnet 5.5 rules: no `thinking: disabled`, no forced `tool_choice`, no prefill. Server-side refusal fallback (`server-side-fallback-2026-07-01`, `fallbacks="default"`; Python form verified at implementation); check `stop_reason`. Typed SDK errors → HTTP errors. `cache_control` on the stable system prompt + tools. `ADVICE_ENABLED`-style flag → `AI_ENABLED` env setting.
 
 **Personas (per board, decided in #6):** each **board's** assistant is a persona (`app/ai/personas.py`); templates assign one per board, plus a default for the portal (stored as `Board.persona_id`, null = the default). A persona has a **name**, an **avatar** (frontend asset keyed by persona id), a **personality** (tone of voice) and **expertise** (domain knowledge in the system prompt, plus the set of agent tools it may use, and its effort level). One shared agent loop loads the **current board's** persona; boards in portals without a template get a general-purpose persona. Each persona's system prompt is kept stable so it is prompt-cached. Users can't edit personas yet (a later column + migration could allow a custom name or instructions).
-1. **Advice / summary** (port of compass `getBoardAdvice`): gather all widget data → the board persona's advice prompt (replaces the ported `buildAdvicePrompt`) → stream to the existing advice widget. Effort `low`.
+1. **Advice in the assistant** (replaces compass's advice widget and `getBoardAdvice`, decided 2026-11-01, #32): the assistant panel offers advice-style suggested prompts and an optional opening note, written from the board's widget data in the persona's voice (replaces the ported `buildAdvicePrompt`). Effort `low`.
 2. **Assistant chat**: streaming Q&A about the board's data. Effort `low`.
 3. **Board agent**: `client.beta.messages.tool_runner(stream=True)` with `@beta_async_tool(eager_input_streaming=True)` tools `list_widgets`, `get_widget_data`, `add_widget(type, config, x?, y?, w?, h?)`, `update_widget`, `remove_widget`, `move_widget`, `add_data_rows` (filtered to the persona's allowed tools). Effort from the persona (default `medium`), `tool_choice` auto. Per-request closures scope to user/board; Pydantic validation; mutations recorded for **Undo**; capped iterations (within Vercel function limits); SSE `text` / `tool_call` / `board_updated` events → the frontend invalidates queries and the data bus refreshes charts.
 
@@ -165,11 +164,11 @@ Since 2026-10-18 the roadmap is organized **by feature**: each milestone mixes b
 3. **Log in**: JWT cookie session and `get_current_user`, GitHub and Google OAuth, account linking, rate limiting, auth tests, owner-scoping tests; then the typed API client and the log-in page, RequireAuth and user menu.
 4. **Deploy**: Turso DB + migrate workflow, Vercel project + env vars + `vercel.json`, production OAuth callbacks and smoke test.
 5. **Portals and boards**: default portal (backend); portal and board nav and routes, the Portals page (create, rename, delete, make default), navbar board links look.
-6. **Board canvas**: port compass's widget engine (registry, data bus, registrations, DashboardCanvas, Form/LineChart/Advice widgets), parity check, widget restyle, motion and grid styling.
+6. **Board canvas**: port compass's widget engine (registry, data bus, registrations, DashboardCanvas, Form/LineChart widgets), parity check, widget restyle, motion and grid styling.
 7. **Widget types**: widget config schemas (backend); add/edit/remove widget UI, stat, chart, data table and schedule widgets.
 8. **Settings**: the settings page (account, appearance, delete account) and the navbar settings link. Portals have their own page, not settings.
 9. **Demo**: public demo with guest sessions, and the landing page.
-10. **AI assistant**: Anthropic client, personas per board, advice, assistant chat and panel, conversation persistence, agent tools and loop, undo, AI tests.
+10. **AI assistant**: Anthropic client, personas per board, assistant chat and panel (with advice as suggested prompts), conversation persistence, agent tools and loop, undo, AI tests.
 11. **Polish**: contrast, performance and browser verification.
 
 ## Open questions (decide later)
@@ -179,7 +178,7 @@ Since 2026-10-18 the roadmap is organized **by feature**: each milestone mixes b
 ## Verification
 - `uv run pytest`: CRUD + owner scoping (user → portal → board → widget), create-portal-from-template copies every board, widget and data row with references resolved, cascading deletes, guest expiry, auth flows with mocked Authlib, AI tools with a mocked Anthropic client. CI repeats on `sqlite+libsql:///test.db`.
 - `pnpm test && pnpm build`; CI green.
-- **Engine parity check vs compass-boards** (run both locally): entering data in an input widget refreshes the linked chart via the data bus; drag/resize persists after reload; advice produces output.
+- **Engine parity check vs compass-boards** (run both locally): entering data in an input widget refreshes the linked chart via the data bus; drag/resize persists after reload.
 - **Demo:** in a private window, `/demo` opens a populated wellness studio portal without signing in; add a class to the schedule, rearrange widgets and chat with the persona; changes persist on reload and are invisible to another visitor's demo; the guest expires after 24 hours.
 - New features: create a portal from the wellness studio template and a blank portal; create a custom board → agent: "add a data table of monthly revenue and a bar chart of it" → widgets appear live → Undo reverts; sign in with Google using the same email → same portals.
 - Production: run `migrate.yml`, repeat the smoke test on the Vercel URL. `git ls-files | grep .env` shows only `.env.example`.

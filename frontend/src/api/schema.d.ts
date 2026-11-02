@@ -505,7 +505,7 @@ export interface components {
          * WidgetType
          * @enum {string}
          */
-        WidgetType: "form" | "advice" | "chart" | "stat" | "table" | "schedule";
+        WidgetType: "form" | "chart" | "stat" | "table" | "schedule";
         /**
          * WidgetUpdate
          * @description Only the fields that were sent are changed. The type can't change: remove and add instead.
