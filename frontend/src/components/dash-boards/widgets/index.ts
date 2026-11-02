@@ -8,7 +8,6 @@ import type {WidgetDefinition} from "./widget-types"
 const definitions: Omit<WidgetDefinition, "component">[] = [
   {type: "stat", kind: "output", label: "Stat", defaultSize: {w: 3, h: 2}},
   {type: "chart", kind: "output", label: "Chart", defaultSize: {w: 8, h: 6}},
-  {type: "advice", kind: "output", label: "Advice", defaultSize: {w: 4, h: 3}},
   {type: "table", kind: "input", label: "Table", defaultSize: {w: 12, h: 10}},
   {type: "schedule", kind: "input", label: "Schedule", defaultSize: {w: 12, h: 12}},
   {type: "form", kind: "input", label: "Form", defaultSize: {w: 6, h: 8}},

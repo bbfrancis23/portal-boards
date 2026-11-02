@@ -7,7 +7,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class WidgetType(StrEnum):
     FORM = "form"
-    ADVICE = "advice"
     CHART = "chart"
     STAT = "stat"
     TABLE = "table"
