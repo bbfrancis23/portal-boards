@@ -1,6 +1,6 @@
 import {expect, test} from "vitest"
 
-import {periodRange, runSource, type Source} from "./run-source"
+import {periodRange, runSource, runSourceGroups, runSourceSeries, type Source} from "./run-source"
 import type {WidgetData} from "@/hooks/widgets/useWidgetRows"
 
 // Wednesday, 4 November 2026.
@@ -72,6 +72,54 @@ test("date-times count on their day", () => {
 test("avg averages the field over matching rows", () => {
   const source: Source = {widget: 1, aggregate: "avg", field: "amount", where: {stream: "Spa"}}
   expect(runSource(sales, source)).toBe(85)
+})
+
+test("groups give one slice per value, counted after where", () => {
+  const members = [
+    row(1, {membership: "Drop-in", status: "active"}),
+    row(2, {membership: "Class pack", status: "active"}),
+    row(3, {membership: "Drop-in", status: "active"}),
+    row(4, {membership: "Monthly unlimited", status: "inactive"}),
+  ]
+  const source: Source = {
+    widget: 1,
+    aggregate: "count",
+    where: {status: "active"},
+    groupBy: "membership",
+  }
+
+  expect(runSourceGroups(members, source, ["cyan.6", "violet.6"])).toEqual([
+    {name: "Drop-in", value: 2, color: "cyan.6"},
+    {name: "Class pack", value: 1, color: "violet.6"},
+    {name: "Monthly unlimited", value: 0, color: "cyan.6"},
+  ])
+})
+
+test("last 6 months runs through the end of this month", () => {
+  expect(periodRange("last_6_months", today)).toEqual({start: "2026-06-01", end: "2026-12-01"})
+})
+
+test("series give each month a total per value, with 0 for months without sales", () => {
+  const source: Source = {
+    widget: 1,
+    aggregate: "sum",
+    field: "amount",
+    dateField: "date",
+    bucket: "month",
+    period: "last_6_months",
+    seriesBy: "stream",
+  }
+
+  const {data, series} = runSourceSeries(sales, source, ["cyan.6", "violet.6"], today)
+
+  expect(series).toEqual([
+    {name: "Spa", color: "cyan.6"},
+    {name: "Membership", color: "violet.6"},
+  ])
+  expect(data.map((point) => point.month)).toEqual(["Jun", "Jul", "Aug", "Sep", "Oct", "Nov"])
+  expect(data[0]).toEqual({month: "Jun", Spa: 0, Membership: 0})
+  expect(data[4]).toEqual({month: "Oct", Spa: 135, Membership: 0})
+  expect(data[5]).toEqual({month: "Nov", Spa: 120, Membership: 89})
 })
 
 test("no rows gives 0", () => {
