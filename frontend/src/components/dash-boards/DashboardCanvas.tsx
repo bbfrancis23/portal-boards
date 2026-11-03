@@ -54,7 +54,7 @@ const DashboardCanvas = () => {
           ))}
         </SimpleGrid>
       )}
-      {isError && <Alert color="coral">Couldn't load the widgets. Please try again.</Alert>}
+      {isError && <Alert color="danger">Couldn't load the widgets. Please try again.</Alert>}
       {mounted && widgets && (
         <ResponsiveGridLayout
           cols={dynamicColCount}
@@ -74,7 +74,7 @@ const DashboardCanvas = () => {
                 : (definition?.label ?? widget.type)
             return (
               <div key={String(widget.id)}>
-                <WidgetShell title={title} draggable={editable}>
+                <WidgetShell title={title} editable={editable} instance={widget}>
                   {Widget ? (
                     <Widget instance={widget} />
                   ) : (

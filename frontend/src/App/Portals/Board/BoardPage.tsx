@@ -1,7 +1,7 @@
 import {useBoards, type Board} from "@/hooks/board/useBoards"
 import {Skeleton, Stack, Title, ActionIcon, Group} from "@mantine/core"
 import {IconEdit} from "@tabler/icons-react"
-import EditBoardModal from "@/components/modals/EditBoardModal"
+import EditBoardModal from "@/components/modals/board/EditBoardModal"
 import {useDisclosure} from "@mantine/hooks"
 import {useNumberIds} from "@/hooks/useNumberIds"
 import DashboardCanvas from "@/components/dash-boards/DashboardCanvas"

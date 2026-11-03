@@ -46,7 +46,7 @@ const NewPortalModal = ({opened, onClose}: NewPortalModalProps) => {
       <Stack>
         <TextInput {...form.getInputProps("name")} label="Name" placeholder="My portal" />
         {createPortal.isError && (
-          <Alert color="coral">Couldn't create the portal. Please try again.</Alert>
+          <Alert color="danger">Couldn't create the portal. Please try again.</Alert>
         )}
         {templates?.map((template) => (
           <Card key={template.id} shadow="sm" padding="lg" withBorder>

@@ -33,7 +33,7 @@ export const useCreateWidgetRow = () => {
       queryClient.invalidateQueries({queryKey: ["widgets", widgetId, "data"]}),
     onError: () =>
       notifications.show({
-        color: "coral",
+        color: "danger",
         title: "Couldn't save the row",
         message: "Please try again.",
       }),

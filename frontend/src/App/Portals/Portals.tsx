@@ -1,5 +1,5 @@
-import EditPortalModal from "@/components/modals/EditPortalModal"
-import NewPortalModal from "@/components/modals/NewPortalModal"
+import EditPortalModal from "@/components/modals/portal/EditPortalModal"
+import NewPortalModal from "@/components/modals/portal/NewPortalModal"
 import {usePortals} from "@/hooks/portal/usePortals"
 import {useTemplates} from "@/hooks/useTemplates"
 import {

@@ -38,14 +38,14 @@ const DeletePortalModal = ({opened, onClose, portalId, portalName}: DeletePortal
           data-autofocus
         />
         {deletePortal.isError && (
-          <Alert color="coral">Couldn't delete the portal. Please try again.</Alert>
+          <Alert color="danger">Couldn't delete the portal. Please try again.</Alert>
         )}
         <Group justify="flex-end">
           <Button variant="subtle" onClick={close}>
             Cancel
           </Button>
           <Button
-            color="coral"
+            color="danger"
             disabled={!confirmed}
             loading={deletePortal.isPending}
             onClick={() => deletePortal.mutate(portalId, {onSuccess: close})}>

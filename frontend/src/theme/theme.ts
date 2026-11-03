@@ -48,7 +48,8 @@ declare module "@mantine/core" {
   }
 }
 
-export const scales = {cyan, lime, violet, coral, amber, silver, slate}
+// `danger` names a job, not a color: errors and destructive actions use it, and a theme picks its scale.
+export const scales = {cyan, lime, violet, coral, amber, silver, slate, danger: coral}
 
 // Text-style variants (subtle, outline, light), focus rings and links use `primaryShade`:
 // a deep shade in light mode (readable on the pale page), a bright one in dark mode.
