@@ -3,10 +3,11 @@ import {DateInput} from "@mantine/dates"
 import type {GetInputPropsReturnType} from "@mantine/form"
 
 import type {Column} from "./table-types"
+import type {ReactElement} from "react"
 
 type ColumnInputProps = {column: Column; inputProps: GetInputPropsReturnType}
 
-const ColumnInput = ({column, inputProps}: ColumnInputProps) => {
+const ColumnInput = ({column, inputProps}: ColumnInputProps): ReactElement => {
   switch (column.type) {
     case "text":
       return <TextInput placeholder={column.label} aria-label={column.label} {...inputProps} />
@@ -39,6 +40,8 @@ const ColumnInput = ({column, inputProps}: ColumnInputProps) => {
           {...inputProps}
         />
       )
+    case "number":
+      return <NumberInput placeholder={column.label} aria-label={column.label} {...inputProps} />
   }
 }
 

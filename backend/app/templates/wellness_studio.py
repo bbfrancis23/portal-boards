@@ -135,6 +135,7 @@ MEMBERS = WidgetSpec(
                 "options": ["active", "inactive"],
             },
             {"key": "joined", "label": "Joined", "type": "date"},
+            {"key": "visits", "label": "Visits", "type": "number"},
         ],
     },
 )
@@ -393,6 +394,7 @@ def _members(rng: random.Random, today: date) -> list[dict[str, Any]]:
                 "membership": rng.choices(MEMBERSHIPS, weights=[45, 30, 25])[0],
                 "status": "active" if rng.random() < 0.85 else "inactive",
                 "joined": joined.isoformat(),
+                "visits": rng.randint(0, 120),
             }
         )
     return members
