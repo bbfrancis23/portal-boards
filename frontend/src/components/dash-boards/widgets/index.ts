@@ -1,3 +1,4 @@
+import ChartWidget from "./ChartWidget"
 import PlaceholderWidget from "./PlaceholderWidget"
 import StatWidget from "./StatWidget"
 import TableWidget from "./table-widget/TableWidget"
@@ -18,7 +19,7 @@ const definitions: WidgetDefinition[] = [
     kind: "output",
     label: "Chart",
     defaultSize: {w: 8, h: 6},
-    component: PlaceholderWidget,
+    component: ChartWidget,
   },
   {
     type: "table",

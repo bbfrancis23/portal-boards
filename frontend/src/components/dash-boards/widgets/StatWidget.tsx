@@ -30,7 +30,11 @@ const changeBadge = (now: number, before: number, format: StatConfig["format"]) 
   return {change, label: signed(change, `${percent}%`)}
 }
 
-const comparisonLabel = {this_week: "vs last week", this_month: "vs last month"}
+const comparisonLabel = {
+  this_week: "vs last week",
+  this_month: "vs last month",
+  last_6_months: "vs the 6 months before",
+}
 
 const StatWidget = ({instance}: WidgetComponentProps) => {
   const config = instance.config as StatConfig

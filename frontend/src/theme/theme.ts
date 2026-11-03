@@ -115,7 +115,21 @@ export const theme = createTheme({
     xl: "var(--pb-glow-xl)",
   },
 
-  other: {colorTokens, effectTokens},
+  // Charts color their slices and series in this order, repeating when there are more.
+  other: {
+    colorTokens,
+    effectTokens,
+    chartColors: [
+      "cyan.6",
+      "violet.6",
+      "lime.6",
+      "coral.6",
+      "amber.6",
+      "cyan.3",
+      "violet.3",
+      "lime.3",
+    ],
+  },
 
   // Controls are full pills (LOOK.md rule 2).
   components: {
