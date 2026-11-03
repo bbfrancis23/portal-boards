@@ -5,7 +5,7 @@ import {useEditBoard} from "@/hooks/board/useEditBoard"
 import {useNumberIds} from "@/hooks/useNumberIds"
 import {useDisclosure} from "@mantine/hooks"
 
-import DeleteBoardModal from "@/components/modals/DeleteBoardModal"
+import DeleteBoardModal from "@/components/modals/board/DeleteBoardModal"
 
 type EditBoardModalProps = {
   opened: boolean
@@ -51,7 +51,7 @@ const EditBoardModal = ({opened, onClose}: EditBoardModalProps) => {
               Save
             </Button>
             <Divider />
-            <Button variant="subtle" color="coral" onClick={askToDelete}>
+            <Button variant="subtle" color="danger" onClick={askToDelete}>
               Delete dashboard
             </Button>
           </Stack>

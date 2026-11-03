@@ -23,7 +23,7 @@ const Overlays = () => {
           <Menu.Dropdown>
             <Menu.Label>Widget</Menu.Label>
             <Menu.Item leftSection={<IconPencil size={14} />}>Edit</Menu.Item>
-            <Menu.Item leftSection={<IconTrash size={14} />} color="coral">
+            <Menu.Item leftSection={<IconTrash size={14} />} color="danger">
               Remove
             </Menu.Item>
           </Menu.Dropdown>

@@ -3,7 +3,7 @@ import {useDisclosure} from "@mantine/hooks"
 import {usePortals} from "@/hooks/portal/usePortals"
 import {hasLength, useForm} from "@mantine/form"
 import {useEditPortal} from "@/hooks/portal/useEditPortal"
-import DeletePortalModal from "@/components/modals/DeletePortalModal"
+import DeletePortalModal from "@/components/modals/portal/DeletePortalModal"
 
 type EditPortalModalProps = {
   opened: boolean
@@ -52,7 +52,7 @@ const EditPortalModal = ({opened, onClose, portalId}: EditPortalModalProps) => {
               Save
             </Button>
             <Divider />
-            <Button variant="subtle" color="coral" onClick={askToDelete}>
+            <Button variant="subtle" color="danger" onClick={askToDelete}>
               Delete portal
             </Button>
           </Stack>

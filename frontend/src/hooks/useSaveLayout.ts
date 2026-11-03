@@ -43,7 +43,7 @@ export const useSaveLayout = () => {
     onError: (_error, {boardId}, context) => {
       moveWidgetsBack(boardId, context?.oldWidgets)
       notifications.show({
-        color: "coral",
+        color: "danger",
         title: "Couldn't save the layout",
         message: "Your widgets were moved back. Please try again.",
       })

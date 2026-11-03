@@ -40,14 +40,14 @@ const DeleteBoardModal = ({
       <Stack>
         <Text size="sm">This deletes the dashboard and all its widgets. This can't be undone.</Text>
         {deleteBoard.isError && (
-          <Alert color="coral">Couldn't delete the dashboard. Please try again.</Alert>
+          <Alert color="danger">Couldn't delete the dashboard. Please try again.</Alert>
         )}
         <Group justify="flex-end">
           <Button variant="subtle" onClick={close}>
             Cancel
           </Button>
           <Button
-            color="coral"
+            color="danger"
             loading={deleteBoard.isPending}
             onClick={() => remove().catch(() => {})}>
             Delete dashboard

@@ -2,7 +2,7 @@ import {useBoards} from "@/hooks/board/useBoards"
 import {Button, Group, NavLink, Title} from "@mantine/core"
 import {Link} from "react-router"
 import IconDashboard from "@/components/icons/IconDashboard"
-import NewBoardModal from "./modals/NewBoardModal"
+import NewBoardModal from "./modals/board/NewBoardModal"
 import {useDisclosure} from "@mantine/hooks"
 import {useNumberIds} from "@/hooks/useNumberIds"
 

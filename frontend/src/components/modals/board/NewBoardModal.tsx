@@ -47,7 +47,7 @@ const NewBoardModal = ({opened, onClose, portalId}: NewBoardModalProps) => {
             data-autofocus
           />
           {createBoard.isError && (
-            <Alert color="coral">Couldn't create the dashboard. Please try again.</Alert>
+            <Alert color="danger">Couldn't create the dashboard. Please try again.</Alert>
           )}
           <Button type="submit" fullWidth loading={createBoard.isPending}>
             Create dashboard
