@@ -191,7 +191,8 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete Widget Data */
+        delete: operations["delete_widget_data_api_widgets__widget_id__data__row_id__delete"];
         options?: never;
         head?: never;
         /** Update Widget Data */
@@ -1127,6 +1128,38 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["WidgetDataRead"][];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_widget_data_api_widgets__widget_id__data__row_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                row_id: number;
+                widget_id: number;
+            };
+            cookie?: {
+                pb_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

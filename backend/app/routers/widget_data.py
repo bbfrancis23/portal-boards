@@ -44,6 +44,18 @@ def get_owned_widget_by_id(
     return widget
 
 
+def get_widget_row(session: SessionDep, widget: WidgetInstance, row_id: int) -> WidgetData:
+    # Matching the widget too stops a row from being edited or deleted through a widget it isn't in.
+    widget_data = session.scalar(
+        select(WidgetData).where(
+            WidgetData.id == row_id, WidgetData.widget_instance_id == widget.id
+        )
+    )
+    if widget_data is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Row not found")
+    return widget_data
+
+
 OwnedWidgetDep = Annotated[WidgetInstance, Depends(get_owned_widget)]
 OwnedWidgetByIdDep = Annotated[WidgetInstance, Depends(get_owned_widget_by_id)]
 
@@ -88,15 +100,15 @@ def create_widget_data(
 def update_widget_data(
     row_id: int, widget: OwnedWidgetByIdDep, session: SessionDep, body: WidgetDataCreate
 ) -> WidgetDataRead:
-    # Matching the widget too stops a row from being edited through a widget it isn't in.
-    widget_data = session.scalar(
-        select(WidgetData).where(
-            WidgetData.id == row_id, WidgetData.widget_instance_id == widget.id
-        )
-    )
-    if widget_data is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Row not found")
+    widget_data = get_widget_row(session, widget, row_id)
     widget_data.data = body.data
     session.commit()
     session.refresh(widget_data)
     return WidgetDataRead.model_validate(widget_data)
+
+
+@routerWidget.delete("/{row_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_widget_data(row_id: int, widget: OwnedWidgetByIdDep, session: SessionDep) -> None:
+    widget_data = get_widget_row(session, widget, row_id)
+    session.delete(widget_data)
+    session.commit()
