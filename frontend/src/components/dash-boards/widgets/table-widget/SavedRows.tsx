@@ -1,6 +1,7 @@
 import {Table, Text} from "@mantine/core"
 
 import type {Column, Row} from "./table-types"
+import SavedRow from "./SavedRow"
 
 type SavedRowsProps = {rows: Row[] | undefined; columns: Column[]}
 
@@ -16,12 +17,7 @@ const SavedRows = ({rows, columns}: SavedRowsProps) => (
       </Table.Tr>
     )}
     {rows?.map((row) => (
-      <Table.Tr key={row.id}>
-        {columns.map((column) => (
-          <Table.Td key={column.key}>{String(row.data[column.key] ?? "")}</Table.Td>
-        ))}
-        <Table.Td />
-      </Table.Tr>
+      <SavedRow columns={columns} row={row} key={row.id} />
     ))}
   </>
 )

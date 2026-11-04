@@ -1,4 +1,4 @@
-import {ActionIcon, Table} from "@mantine/core"
+import {ActionIcon, Group, Table} from "@mantine/core"
 import {useDisclosure} from "@mantine/hooks"
 import {IconPlus, IconX} from "@tabler/icons-react"
 
@@ -25,12 +25,14 @@ const TableWidget = ({instance}: WidgetComponentProps) => {
               <Table.Th key={column.key}>{column.label}</Table.Th>
             ))}
             <Table.Th>
-              <ActionIcon
-                variant="light"
-                onClick={toggle}
-                aria-label={adding ? "Cancel" : "Add row"}>
-                {adding ? <IconX size={18} /> : <IconPlus size={18} />}
-              </ActionIcon>
+              <Group justify="flex-end">
+                <ActionIcon
+                  variant="light"
+                  onClick={toggle}
+                  aria-label={adding ? "Cancel" : "Add row"}>
+                  {adding ? <IconX size={18} /> : <IconPlus size={18} />}
+                </ActionIcon>
+              </Group>
             </Table.Th>
           </Table.Tr>
         </Table.Thead>
