@@ -242,3 +242,57 @@ def test_other_users_widget_data_is_protected(
     assert get_response.status_code == 404
     assert post_response.status_code == 404
     assert len(widget_rows(session, widget_id)) == rows_before
+
+
+def test_delete_widget_data_deletes_the_row(
+    client: TestClient, session: Session, dev_user: User
+) -> None:
+    widget = widget_with_rows(session, dev_user)
+    row_id = widget_rows(session, widget.id)[0].id
+
+    response = client.delete(f"/api/widgets/{widget.id}/data/{row_id}")
+
+    assert response.status_code == 204
+    assert row_id not in [row.id for row in widget_rows(session, widget.id)]
+
+
+def test_delete_other_users_widget_data_is_404(
+    session: Session, other_user: User, client: TestClient
+) -> None:
+    widget = widget_with_rows(session, other_user)
+    row = widget_rows(session, widget.id)[0]
+    data_before = row.data
+
+    response = client.delete(f"/api/widgets/{widget.id}/data/{row.id}")
+
+    assert response.status_code == 404
+    session.refresh(row)
+    assert row.data == data_before
+
+
+def test_delete_a_row_through_another_widget_is_404(
+    client: TestClient, session: Session, dev_user: User
+) -> None:
+    widget = widget_with_rows(session, dev_user)
+    row_elsewhere = session.scalar(
+        select(WidgetData).where(WidgetData.widget_instance_id != widget.id)
+    )
+    assert row_elsewhere is not None
+
+    response = client.delete(f"/api/widgets/{widget.id}/data/{row_elsewhere.id}")
+
+    assert response.status_code == 404
+    rows_still_there = widget_rows(session, row_elsewhere.widget_instance_id)
+    assert row_elsewhere.id in [row.id for row in rows_still_there]
+
+
+def test_delete_an_imaginary_row_is_404(
+    client: TestClient, session: Session, dev_user: User
+) -> None:
+    widget = widget_with_rows(session, dev_user)
+    rows_before = len(widget_rows(session, widget.id))
+
+    response = client.delete(f"/api/widgets/{widget.id}/data/666666")
+
+    assert response.status_code == 404
+    assert len(widget_rows(session, widget.id)) == rows_before
