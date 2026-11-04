@@ -181,6 +181,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/widgets/{widget_id}/data/{row_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Widget Data */
+        patch: operations["update_widget_data_api_widgets__widget_id__data__row_id__patch"];
+        trace?: never;
+    };
     "/api/users/me": {
         parameters: {
             query?: never;
@@ -1109,6 +1126,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WidgetDataRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_widget_data_api_widgets__widget_id__data__row_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                row_id: number;
+                widget_id: number;
+            };
+            cookie?: {
+                pb_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WidgetDataCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetDataRead"];
                 };
             };
             /** @description Validation Error */

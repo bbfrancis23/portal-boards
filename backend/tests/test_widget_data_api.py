@@ -157,6 +157,76 @@ def test_imaginary_board_or_widget_404(
     assert response.status_code == 404
 
 
+def test_update_widget_data_replaces_the_row(
+    client: TestClient, session: Session, dev_user: User
+) -> None:
+    widget = widget_with_rows(session, dev_user)
+    row_id = widget_rows(session, widget.id)[0].id
+
+    response = client.patch(
+        f"/api/widgets/{widget.id}/data/{row_id}", json={"data": {"name": "Ann", "visits": 7}}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["data"] == {"name": "Ann", "visits": 7}
+    rows = client.get(f"/api/widgets/{widget.id}/data").json()
+    assert next(r for r in rows if r["id"] == row_id)["data"] == {"name": "Ann", "visits": 7}
+
+
+def test_update_widget_data_with_an_empty_row_is_422(
+    client: TestClient, session: Session, dev_user: User
+) -> None:
+    widget = widget_with_rows(session, dev_user)
+    row = widget_rows(session, widget.id)[0]
+    data_before = row.data
+
+    response = client.patch(f"/api/widgets/{widget.id}/data/{row.id}", json={"data": {}})
+
+    assert response.status_code == 422
+    session.refresh(row)
+    assert row.data == data_before
+
+
+def test_update_a_row_through_another_widget_is_404(
+    client: TestClient, session: Session, dev_user: User
+) -> None:
+    widget = widget_with_rows(session, dev_user)
+    row_elsewhere = session.scalar(
+        select(WidgetData).where(WidgetData.widget_instance_id != widget.id)
+    )
+    assert row_elsewhere is not None
+
+    response = client.patch(
+        f"/api/widgets/{widget.id}/data/{row_elsewhere.id}", json={"data": {"a": 1}}
+    )
+
+    assert response.status_code == 404
+
+
+def test_update_an_imaginary_row_is_404(
+    client: TestClient, session: Session, dev_user: User
+) -> None:
+    widget = widget_with_rows(session, dev_user)
+
+    response = client.patch(f"/api/widgets/{widget.id}/data/666666", json={"data": {"a": 1}})
+
+    assert response.status_code == 404
+
+
+def test_update_other_users_widget_data_is_404(
+    session: Session, other_user: User, client: TestClient
+) -> None:
+    widget = widget_with_rows(session, other_user)
+    row = widget_rows(session, widget.id)[0]
+    data_before = row.data
+
+    response = client.patch(f"/api/widgets/{widget.id}/data/{row.id}", json={"data": {"a": 1}})
+
+    assert response.status_code == 404
+    session.refresh(row)
+    assert row.data == data_before
+
+
 def test_other_users_widget_data_is_protected(
     session: Session, other_user: User, client: TestClient
 ) -> None:

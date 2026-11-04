@@ -1,4 +1,4 @@
-import {Button, Table} from "@mantine/core"
+import {Button, Group, Table} from "@mantine/core"
 import {useForm} from "@mantine/form"
 
 import ColumnInput from "./ColumnInput"
@@ -38,12 +38,14 @@ const AddRow = ({widget, columns}: AddRowProps) => {
         </Table.Td>
       ))}
       <Table.Td>
-        <Button
-          disabled={!hasAnyValue}
-          onClick={() => save(form.values)}
-          loading={addRow.isPending}>
-          Create
-        </Button>
+        <Group justify="flex-end">
+          <Button
+            disabled={!hasAnyValue}
+            onClick={() => save(form.values)}
+            loading={addRow.isPending}>
+            Create
+          </Button>
+        </Group>
       </Table.Td>
     </Table.Tr>
   )
