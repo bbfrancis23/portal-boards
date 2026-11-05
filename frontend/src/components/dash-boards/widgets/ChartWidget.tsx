@@ -2,7 +2,7 @@ import {BarChart, PieChart} from "@mantine/charts"
 import type {WidgetComponentProps} from "./widget-types"
 import {Box, Center, useMantineTheme} from "@mantine/core"
 import {useElementSize} from "@mantine/hooks"
-import {runSourceGroups, runSourceSeries, type Source} from "./run-source"
+import {aggregateByGroup, aggregateByMonth, type Source} from "./aggregate"
 import {useWidgetRows} from "@/hooks/widgets/useWidgetRows"
 
 // Mantine's PieChart adds this much height under the circle for its legend.
@@ -23,7 +23,7 @@ const ChartWidget = ({instance}: WidgetComponentProps) => {
 
   if (config.chartType === "bar") {
     const {data, series} =
-      source && rows ? runSourceSeries(rows, source, colors) : {data: [], series: []}
+      source && rows ? aggregateByMonth(rows, source, colors) : {data: [], series: []}
     return (
       <BarChart
         h="100%"
@@ -36,7 +36,7 @@ const ChartWidget = ({instance}: WidgetComponentProps) => {
     )
   }
 
-  const groups = source && rows ? runSourceGroups(rows, source, colors) : []
+  const groups = source && rows ? aggregateByGroup(rows, source, colors) : []
   const pieSize = Math.max(0, Math.min(width, height - PIE_LEGEND_HEIGHT))
   // The pie floats over the measured box, so its own size can't feed back into the measurement.
   return (
