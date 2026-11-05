@@ -63,6 +63,10 @@ export const periodRange = (period: Period, today: Date, periodsBack = 0, toDate
   return {start: isoDay(start), end: isoDay(soFar < end ? soFar : end)}
 }
 
+// Rows without the field a chart splits by have no slice or series to go in.
+const hasValue = (row: WidgetData, field: string) =>
+  row.data[field] !== undefined && row.data[field] !== null && row.data[field] !== ""
+
 const matchesWhere = (row: WidgetData, where: Source["where"] = {}) =>
   Object.entries(where).every(([key, value]) => row.data[key] === value)
 
@@ -116,11 +120,12 @@ export const aggregateByGroup = (
   source: Source,
   colors: string[],
 ): {name: string; value: number; color: string}[] => {
-  if (!source.groupBy) return []
+  const groupBy = source.groupBy
+  if (!groupBy) return []
 
   const groups: Record<string, WidgetData[]> = {}
-  for (const row of rows) {
-    const key = String(row.data[source.groupBy])
+  for (const row of rows.filter((row) => hasValue(row, groupBy))) {
+    const key = String(row.data[groupBy])
     groups[key] ??= []
     groups[key].push(row)
   }
@@ -145,7 +150,10 @@ export const aggregateByMonth = (
   if (!seriesBy) return {data: [], series: []}
 
   const rowsShown = rows.filter(
-    (row) => matchesWhere(row, source.where) && inPeriod(row, source, today, 0, false),
+    (row) =>
+      hasValue(row, seriesBy) &&
+      matchesWhere(row, source.where) &&
+      inPeriod(row, source, today, 0, false),
   )
   const names = [...new Set(rowsShown.map((row) => String(row.data[seriesBy])))]
   const series = names.map((name, i) => ({name, color: colors[i % colors.length]}))

@@ -2,20 +2,19 @@ import {ActionIcon, Group, Table} from "@mantine/core"
 import {useForm} from "@mantine/form"
 
 import ColumnInput from "./ColumnInput"
+import {emptyValue, isFilledIn} from "./column-values"
 import type {Column, Row} from "./table-types"
 import {useEditWidgetRow} from "@/hooks/widgets/useEditWidgetRow"
 import {IconX, IconCheck} from "@tabler/icons-react"
 
 type EditRowProps = {columns: Column[]; row: Row; onDone: () => void}
 
-const isFilledIn = (value: unknown) => value !== "" && value !== null
-
 const EditRow = ({columns, row, onDone}: EditRowProps) => {
   const editRow = useEditWidgetRow()
 
   const form = useForm({
     initialValues: Object.fromEntries(
-      columns.map((col) => [col.key, row.data[col.key] ?? (col.type === "date" ? null : "")]),
+      columns.map((col) => [col.key, row.data[col.key] ?? emptyValue(col)]),
     ),
   })
 
