@@ -17,7 +17,8 @@ const TableWidget = ({instance}: WidgetComponentProps) => {
   const columns = Array.isArray(config?.columns) ? config.columns : []
 
   return (
-    <Table.ScrollContainer minWidth={600} maxHeight={300}>
+    // Fill the widget's body, so rows reach its bottom edge and scroll only when they don't fit.
+    <Table.ScrollContainer minWidth={600} h="100%" maxHeight="100%">
       <Table striped stickyHeader highlightOnHover>
         <Table.Thead>
           <Table.Tr>

@@ -166,6 +166,32 @@ test("series give each month a total per value, with 0 for months without sales"
   expect(data[5]).toEqual({month: "Nov", Spa: 120, Membership: 89})
 })
 
+test("series leave out rows without the field they split by", () => {
+  const source: Source = {
+    widget: 1,
+    aggregate: "sum",
+    field: "amount",
+    dateField: "date",
+    period: "last_6_months",
+    seriesBy: "stream",
+  }
+  const withMissing = [...sales, row(5, {date: "2026-11-03", amount: 60})]
+
+  const {data, series} = aggregateByMonth(withMissing, source, ["cyan.6", "violet.6"], today)
+
+  expect(series.map((s) => s.name)).toEqual(["Spa", "Membership"])
+  expect(data[5]).toEqual({month: "Nov", Spa: 120, Membership: 89})
+})
+
+test("groups leave out rows without the field they group by", () => {
+  const members = [row(1, {membership: "Drop-in"}), row(2, {})]
+  const source: Source = {widget: 1, aggregate: "count", groupBy: "membership"}
+
+  expect(aggregateByGroup(members, source, ["cyan.6"])).toEqual([
+    {name: "Drop-in", value: 1, color: "cyan.6"},
+  ])
+})
+
 test("no rows gives 0", () => {
   expect(aggregateRows([], spaRevenueThisMonth, {})).toBe(0)
   expect(aggregateRows([], {widget: 1, aggregate: "avg", field: "amount"})).toBe(0)
