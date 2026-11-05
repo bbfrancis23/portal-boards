@@ -1,6 +1,13 @@
 import {expect, test} from "vitest"
 
-import {periodRange, runSource, runSourceGroups, runSourceSeries, type Source} from "./run-source"
+import {
+  periodRange,
+  aggregateRows,
+  aggregateByGroup,
+  aggregateByMonth,
+  aggregateByPeriod,
+  type Source,
+} from "./aggregate"
 import type {WidgetData} from "@/hooks/widgets/useWidgetRows"
 
 // Wednesday, 4 November 2026.
@@ -36,23 +43,60 @@ const spaRevenueThisMonth: Source = {
 }
 
 test("count counts every row", () => {
-  expect(runSource(members, {widget: 1, aggregate: "count"})).toBe(3)
+  expect(aggregateRows(members, {widget: 1, aggregate: "count"})).toBe(3)
 })
 
 test("count with where counts only matching rows", () => {
-  expect(runSource(members, {widget: 1, aggregate: "count", where: {status: "active"}})).toBe(2)
+  expect(aggregateRows(members, {widget: 1, aggregate: "count", where: {status: "active"}})).toBe(2)
 })
 
 test("sum adds up the field, reading numbers saved as text", () => {
-  expect(runSource(sales, {widget: 1, aggregate: "sum", field: "amount"})).toBe(344)
+  expect(aggregateRows(sales, {widget: 1, aggregate: "sum", field: "amount"})).toBe(344)
 })
 
 test("sum this month leaves out last month's rows", () => {
-  expect(runSource(sales, spaRevenueThisMonth, today)).toBe(120)
+  expect(aggregateRows(sales, spaRevenueThisMonth, {today})).toBe(120)
 })
 
 test("one period back is last month", () => {
-  expect(runSource(sales, spaRevenueThisMonth, today, 1)).toBe(135)
+  expect(aggregateRows(sales, spaRevenueThisMonth, {today, periodsBack: 1})).toBe(135)
+})
+
+test("this month to date one period back is the same days of last month", () => {
+  expect(periodRange("this_month", today, 1, true)).toEqual({
+    start: "2026-10-01",
+    end: "2026-10-05",
+  })
+})
+
+test("to date never runs past the end of a shorter month", () => {
+  const march31 = new Date(2026, 2, 31)
+  expect(periodRange("this_month", march31, 1, true)).toEqual({
+    start: "2026-02-01",
+    end: "2026-03-01",
+  })
+})
+
+test("this week to date one period back stops on the same weekday", () => {
+  expect(periodRange("this_week", today, 1, true)).toEqual({
+    start: "2026-10-26",
+    end: "2026-10-29",
+  })
+})
+
+test("to date leaves out the rest of last month", () => {
+  const options = {today, periodsBack: 1, toDate: true}
+  expect(aggregateRows(sales, spaRevenueThisMonth, options)).toBe(0)
+})
+
+test("by period gives each period to date, oldest first", () => {
+  const spa = [
+    row(1, {date: "2026-09-02", stream: "Spa", amount: 50}),
+    row(2, {date: "2026-09-20", stream: "Spa", amount: 999}),
+    row(3, {date: "2026-10-03", stream: "Spa", amount: 70}),
+    row(4, {date: "2026-11-02", stream: "Spa", amount: 120}),
+  ]
+  expect(aggregateByPeriod(spa, spaRevenueThisMonth, 3, today)).toEqual([50, 70, 120])
 })
 
 test("this week starts on Monday", () => {
@@ -66,12 +110,12 @@ test("a week back crosses into last month", () => {
 test("date-times count on their day", () => {
   const classes = [row(1, {start: "2026-11-08T18:30"}), row(2, {start: "2026-11-09T07:00"})]
   const source: Source = {widget: 1, aggregate: "count", dateField: "start", period: "this_week"}
-  expect(runSource(classes, source, today)).toBe(1)
+  expect(aggregateRows(classes, source, {today})).toBe(1)
 })
 
 test("avg averages the field over matching rows", () => {
   const source: Source = {widget: 1, aggregate: "avg", field: "amount", where: {stream: "Spa"}}
-  expect(runSource(sales, source)).toBe(85)
+  expect(aggregateRows(sales, source)).toBe(85)
 })
 
 test("groups give one slice per value, counted after where", () => {
@@ -88,7 +132,7 @@ test("groups give one slice per value, counted after where", () => {
     groupBy: "membership",
   }
 
-  expect(runSourceGroups(members, source, ["cyan.6", "violet.6"])).toEqual([
+  expect(aggregateByGroup(members, source, ["cyan.6", "violet.6"])).toEqual([
     {name: "Drop-in", value: 2, color: "cyan.6"},
     {name: "Class pack", value: 1, color: "violet.6"},
     {name: "Monthly unlimited", value: 0, color: "cyan.6"},
@@ -110,7 +154,7 @@ test("series give each month a total per value, with 0 for months without sales"
     seriesBy: "stream",
   }
 
-  const {data, series} = runSourceSeries(sales, source, ["cyan.6", "violet.6"], today)
+  const {data, series} = aggregateByMonth(sales, source, ["cyan.6", "violet.6"], today)
 
   expect(series).toEqual([
     {name: "Spa", color: "cyan.6"},
@@ -123,6 +167,6 @@ test("series give each month a total per value, with 0 for months without sales"
 })
 
 test("no rows gives 0", () => {
-  expect(runSource([], spaRevenueThisMonth, today)).toBe(0)
-  expect(runSource([], {widget: 1, aggregate: "avg", field: "amount"})).toBe(0)
+  expect(aggregateRows([], spaRevenueThisMonth, {})).toBe(0)
+  expect(aggregateRows([], {widget: 1, aggregate: "avg", field: "amount"})).toBe(0)
 })

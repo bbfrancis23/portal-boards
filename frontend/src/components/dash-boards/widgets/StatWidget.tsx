@@ -1,14 +1,19 @@
 import NeonText from "@/theme/NeonText"
 import {Indicator, Stack, Text} from "@mantine/core"
+import {Sparkline} from "@mantine/charts"
 import type {WidgetComponentProps} from "./widget-types"
-import {runSource, type Source} from "./run-source"
+import {aggregateByPeriod, aggregateRows, type Source} from "./aggregate"
 import {useWidgetRows} from "@/hooks/widgets/useWidgetRows"
 
 type StatConfig = {
   format?: "number" | "currency"
   compare?: "previous_period"
+  // A small line of the stat's last few periods, under the number. Needs a source period.
+  sparkline?: boolean
   source?: Source
 }
+
+const SPARKLINE_PERIODS = 6
 
 const formatValue = (value: number, format: StatConfig["format"]) =>
   format === "currency"
@@ -30,10 +35,11 @@ const changeBadge = (now: number, before: number, format: StatConfig["format"]) 
   return {change, label: signed(change, `${percent}%`)}
 }
 
+// Comparisons are to date, so early in a period it isn't measured against a whole one.
 const comparisonLabel = {
-  this_week: "vs last week",
-  this_month: "vs last month",
-  last_6_months: "vs the 6 months before",
+  this_week: "vs same point last week",
+  this_month: "vs same point last month",
+  last_6_months: "vs same point in the 6 months before",
 }
 
 const StatWidget = ({instance}: WidgetComponentProps) => {
@@ -41,11 +47,19 @@ const StatWidget = ({instance}: WidgetComponentProps) => {
   const source = config.source
   const {data: rows} = useWidgetRows(source?.widget)
 
-  const value = source && rows ? runSource(rows, source) : undefined
+  const value = source && rows ? aggregateRows(rows, source) : undefined
   const comparing = config.compare === "previous_period" && source?.period
   const badge =
     comparing && rows && value !== undefined
-      ? changeBadge(value, runSource(rows, source, new Date(), 1), config.format)
+      ? changeBadge(
+          value,
+          aggregateRows(rows, source, {periodsBack: 1, toDate: true}),
+          config.format,
+        )
+      : undefined
+  const history =
+    config.sparkline && source?.period && rows
+      ? aggregateByPeriod(rows, source, SPARKLINE_PERIODS)
       : undefined
 
   return (
@@ -85,6 +99,17 @@ const StatWidget = ({instance}: WidgetComponentProps) => {
         <Text size="xs" c="dimmed">
           {comparisonLabel[comparing]}
         </Text>
+      )}
+      {history?.some((value) => value !== 0) && (
+        <Sparkline
+          data={history}
+          w="100%"
+          maw={160}
+          h={28}
+          curveType="monotone"
+          fillOpacity={0.2}
+          aria-label={`Last ${SPARKLINE_PERIODS} periods`}
+        />
       )}
     </Stack>
   )

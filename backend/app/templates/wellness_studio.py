@@ -367,6 +367,8 @@ REVENUE_BOARD = BoardSpec(
             config={
                 "title": "Spa revenue this month",
                 "format": "currency",
+                "compare": "previous_period",
+                "sparkline": True,
                 "source": {
                     "widget": "sales",
                     "aggregate": "sum",

@@ -22,17 +22,14 @@ const isoDay = (date: Date) =>
     String(date.getDate()).padStart(2, "0"),
   ].join("-")
 
-// First and last-plus-one day of the period, as "YYYY-MM-DD". periodsBack 1 is the one before.
-export const periodRange = (period: Period, today: Date, periodsBack = 0) => {
+const wholePeriod = (period: Period, today: Date, periodsBack: number) => {
   if (period === "this_month") {
     const start = new Date(today.getFullYear(), today.getMonth() - periodsBack, 1)
-    const end = new Date(start.getFullYear(), start.getMonth() + 1, 1)
-    return {start: isoDay(start), end: isoDay(end)}
+    return {start, end: new Date(start.getFullYear(), start.getMonth() + 1, 1)}
   }
   if (period === "last_6_months") {
     const start = new Date(today.getFullYear(), today.getMonth() - 5 - 6 * periodsBack, 1)
-    const end = new Date(start.getFullYear(), start.getMonth() + 6, 1)
-    return {start: isoDay(start), end: isoDay(end)}
+    return {start, end: new Date(start.getFullYear(), start.getMonth() + 6, 1)}
   }
   const daysSinceMonday = (today.getDay() + 6) % 7
   const start = new Date(
@@ -40,31 +37,58 @@ export const periodRange = (period: Period, today: Date, periodsBack = 0) => {
     today.getMonth(),
     today.getDate() - daysSinceMonday - 7 * periodsBack,
   )
-  const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7)
-  return {start: isoDay(start), end: isoDay(end)}
+  return {start, end: new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7)}
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000
+
+// Days from the start of the current period through today, counting today.
+const daysSoFar = (period: Period, today: Date) => {
+  const {start} = wholePeriod(period, today, 0)
+  const midnight = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  // Rounding absorbs the hour a daylight-saving change adds or removes.
+  return Math.round((midnight.getTime() - start.getTime()) / DAY_MS) + 1
+}
+
+// First and last-plus-one day of the period, as "YYYY-MM-DD". periodsBack 1 is the one before.
+// toDate keeps only as many days as have passed in the current period, never past its end.
+export const periodRange = (period: Period, today: Date, periodsBack = 0, toDate = false) => {
+  const {start, end} = wholePeriod(period, today, periodsBack)
+  if (!toDate) return {start: isoDay(start), end: isoDay(end)}
+  const soFar = new Date(
+    start.getFullYear(),
+    start.getMonth(),
+    start.getDate() + daysSoFar(period, today),
+  )
+  return {start: isoDay(start), end: isoDay(soFar < end ? soFar : end)}
 }
 
 const matchesWhere = (row: WidgetData, where: Source["where"] = {}) =>
   Object.entries(where).every(([key, value]) => row.data[key] === value)
 
 // Dates are stored as "YYYY-MM-DD" or "YYYY-MM-DDTHH:MM", so the first ten characters are the day.
-const inPeriod = (row: WidgetData, source: Source, today: Date, periodsBack: number) => {
+const inPeriod = (
+  row: WidgetData,
+  source: Source,
+  today: Date,
+  periodsBack: number,
+  toDate: boolean,
+) => {
   if (!source.period || !source.dateField) return true
   const value = row.data[source.dateField]
   if (typeof value !== "string") return false
   const day = value.slice(0, 10)
-  const {start, end} = periodRange(source.period, today, periodsBack)
+  const {start, end} = periodRange(source.period, today, periodsBack, toDate)
   return start <= day && day < end
 }
 
-export const runSource = (
+export const aggregateRows = (
   rows: WidgetData[],
   source: Source,
-  today = new Date(),
-  periodsBack = 0,
+  {today = new Date(), periodsBack = 0, toDate = false} = {},
 ) => {
   const matching = rows.filter(
-    (row) => matchesWhere(row, source.where) && inPeriod(row, source, today, periodsBack),
+    (row) => matchesWhere(row, source.where) && inPeriod(row, source, today, periodsBack, toDate),
   )
   if (source.aggregate === "count") return matching.length
   const field = source.field
@@ -74,8 +98,20 @@ export const runSource = (
   return matching.length === 0 ? 0 : sum / matching.length
 }
 
+// The value for each of the last `count` periods, oldest first. Each is taken to date, so a
+// period still in progress lines up with the same days of the ones before it.
+export const aggregateByPeriod = (
+  rows: WidgetData[],
+  source: Source,
+  count: number,
+  today = new Date(),
+) =>
+  Array.from({length: count}, (_, i) =>
+    aggregateRows(rows, source, {today, periodsBack: count - 1 - i, toDate: true}),
+  )
+
 // One slice per value of `groupBy`, colored in order and repeating when there are more slices.
-export const runSourceGroups = (
+export const aggregateByGroup = (
   rows: WidgetData[],
   source: Source,
   colors: string[],
@@ -91,7 +127,7 @@ export const runSourceGroups = (
 
   return Object.entries(groups).map(([name, rowsInGroup], i) => ({
     name,
-    value: runSource(rowsInGroup, source),
+    value: aggregateRows(rowsInGroup, source),
     color: colors[i % colors.length],
   }))
 }
@@ -99,7 +135,7 @@ export const runSourceGroups = (
 const MONTHS_SHOWN = 6
 
 // One point per month, oldest first, holding each `seriesBy` value's total for that month.
-export const runSourceSeries = (
+export const aggregateByMonth = (
   rows: WidgetData[],
   source: Source,
   colors: string[],
@@ -109,7 +145,7 @@ export const runSourceSeries = (
   if (!seriesBy) return {data: [], series: []}
 
   const rowsShown = rows.filter(
-    (row) => matchesWhere(row, source.where) && inPeriod(row, source, today, 0),
+    (row) => matchesWhere(row, source.where) && inPeriod(row, source, today, 0, false),
   )
   const names = [...new Set(rowsShown.map((row) => String(row.data[seriesBy])))]
   const series = names.map((name, i) => ({name, color: colors[i % colors.length]}))
@@ -126,7 +162,7 @@ export const runSourceSeries = (
         period: "this_month",
         where: {...source.where, [seriesBy]: name},
       }
-      point[name] = runSource(rows, oneSeriesThisMonth, today, monthsBack)
+      point[name] = aggregateRows(rows, oneSeriesThisMonth, {today, periodsBack: monthsBack})
     }
     return point
   })
