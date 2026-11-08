@@ -6,6 +6,7 @@ import {
 } from "react-grid-layout"
 import "react-grid-layout/css/styles.css"
 import {Alert, SimpleGrid, Skeleton, Text} from "@mantine/core"
+import EmptyState from "@/theme/EmptyState"
 import WidgetShell from "./widgets/WidgetShell"
 import {widgetRegistry} from "./widgets/widget-registry"
 import {useWidgets} from "@/hooks/widgets/useWidgets"
@@ -14,7 +15,9 @@ import {useSaveLayout} from "@/hooks/useSaveLayout"
 
 const dynamicColCount = {lg: 12, md: 12, sm: 12, xs: 1, xxs: 1}
 
-const DashboardCanvas = () => {
+type DashboardCanvasProps = {onAddWidget: () => void}
+
+const DashboardCanvas = ({onAddWidget}: DashboardCanvasProps) => {
   const {width, containerRef, mounted} = useContainerWidth()
   const saveLayout = useSaveLayout()
 
@@ -55,7 +58,13 @@ const DashboardCanvas = () => {
         </SimpleGrid>
       )}
       {isError && <Alert color="danger">Couldn't load the widgets. Please try again.</Alert>}
-      {mounted && widgets && (
+      {widgets?.length === 0 && (
+        <EmptyState
+          message="This board has no widgets yet"
+          action={{label: "Add widget", onClick: onAddWidget}}
+        />
+      )}
+      {mounted && widgets && widgets.length > 0 && (
         <ResponsiveGridLayout
           cols={dynamicColCount}
           dragConfig={{enabled: editable, handle: ".widget-drag-handle"}}

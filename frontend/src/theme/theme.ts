@@ -172,7 +172,8 @@ export const theme = createTheme({
     TextInput: TextInput.extend({defaultProps: {radius: "xl"}}),
     Modal: Modal.extend({
       classNames: {
-        content: `${glassClasses.glass} ${glassClasses.positioned}`,
+        content: `${glassClasses.glass} ${glassClasses.positioned} ${modalClasses.content}`,
+        body: modalClasses.body,
         inner: modalClasses.inner,
       },
       defaultProps: {

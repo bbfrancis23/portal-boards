@@ -13,6 +13,8 @@ class WidgetSpec:
 
     key: str
     type: str
+    # One line shown with the widget in the list of presets.
+    description: str
     x: int
     y: int
     w: int

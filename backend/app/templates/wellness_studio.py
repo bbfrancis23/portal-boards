@@ -119,6 +119,7 @@ SPA_MEMBER_DISCOUNT = 0.15
 MEMBERS = WidgetSpec(
     key="members",
     type="table",
+    description="Everyone who's joined, with their membership, status and visits.",
     x=0,
     y=0,
     w=8,
@@ -143,6 +144,7 @@ MEMBERS = WidgetSpec(
 SCHEDULE = WidgetSpec(
     key="schedule",
     type="schedule",
+    description="This week's classes and spa appointments.",
     x=0,
     y=0,
     w=12,
@@ -153,6 +155,7 @@ SCHEDULE = WidgetSpec(
 SALES = WidgetSpec(
     key="sales",
     type="table",
+    description="Every sale, with its date, member, item and revenue stream.",
     x=0,
     y=6,
     w=12,
@@ -182,6 +185,7 @@ OVERVIEW = BoardSpec(
         WidgetSpec(
             key="active_members",
             type="stat",
+            description="How many members are active right now.",
             x=0,
             y=0,
             w=3,
@@ -199,6 +203,7 @@ OVERVIEW = BoardSpec(
         WidgetSpec(
             key="revenue_this_month",
             type="stat",
+            description="Total sales so far this month, compared with last month.",
             x=3,
             y=0,
             w=3,
@@ -219,6 +224,7 @@ OVERVIEW = BoardSpec(
         WidgetSpec(
             key="classes_this_week",
             type="stat",
+            description="How many classes are on the schedule this week.",
             x=6,
             y=0,
             w=3,
@@ -238,6 +244,7 @@ OVERVIEW = BoardSpec(
         WidgetSpec(
             key="spa_bookings_this_week",
             type="stat",
+            description="How many spa appointments are booked this week.",
             x=9,
             y=0,
             w=3,
@@ -257,6 +264,7 @@ OVERVIEW = BoardSpec(
         WidgetSpec(
             key="attendance_trend",
             type="chart",
+            description="Class bookings each week, over the last 8 weeks.",
             x=0,
             y=2,
             w=12,
@@ -286,6 +294,7 @@ SCHEDULE_BOARD = BoardSpec(
         WidgetSpec(
             key="attendance_by_class",
             type="chart",
+            description="Average bookings per class, for each class type.",
             x=0,
             y=12,
             w=12,
@@ -313,6 +322,7 @@ MEMBERS_BOARD = BoardSpec(
         WidgetSpec(
             key="membership_mix",
             type="chart",
+            description="Active members, split by membership type.",
             x=8,
             y=0,
             w=4,
@@ -338,6 +348,7 @@ REVENUE_BOARD = BoardSpec(
         WidgetSpec(
             key="revenue_by_month",
             type="chart",
+            description="Sales for each of the last 6 months, by revenue stream.",
             x=0,
             y=0,
             w=8,
@@ -360,6 +371,7 @@ REVENUE_BOARD = BoardSpec(
         WidgetSpec(
             key="spa_revenue_this_month",
             type="stat",
+            description="Spa sales so far this month, compared with last month.",
             x=8,
             y=0,
             w=4,

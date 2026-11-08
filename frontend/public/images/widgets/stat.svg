@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-labelledby="title">
+  <title id="title">Stat widget: a tile with a big number, an up-trend badge and a sparkline</title>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22EEFF" stop-opacity="0.10" />
+      <stop offset="1" stop-color="#A77BFF" stop-opacity="0.16" />
+    </linearGradient>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22EEFF" />
+      <stop offset="1" stop-color="#A77BFF" />
+    </linearGradient>
+    <linearGradient id="number" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#A77BFF" />
+      <stop offset="1" stop-color="#22EEFF" />
+    </linearGradient>
+    <linearGradient id="spark" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#22EEFF" />
+      <stop offset="1" stop-color="#B8FF3C" />
+    </linearGradient>
+  </defs>
+
+  <!-- Soft background -->
+  <rect width="320" height="180" fill="url(#sky)" />
+
+  <!-- The stat, shrunk around the center to match the table's size -->
+  <g transform="translate(160 90) scale(0.8) translate(-160 -90)">
+
+  <!-- The stat tile -->
+  <rect x="70" y="28" width="180" height="124" rx="16" fill="#ffffff" fill-opacity="0.30" stroke="url(#tile)" stroke-width="2.5" />
+
+  <!-- Label, then the big number -->
+  <rect x="92" y="48" width="64" height="8" rx="4" fill="#A77BFF" fill-opacity="0.35" />
+  <rect x="92" y="68" width="92" height="22" rx="11" fill="url(#number)" fill-opacity="0.85" />
+
+  <!-- Compare badge: a lime pill with an up arrow -->
+  <rect x="194" y="70" width="38" height="18" rx="9" fill="#B8FF3C" fill-opacity="0.18" stroke="#7FD400" stroke-width="2" />
+  <path d="M213 84 V75 M208.5 79 L213 74.5 L217.5 79" fill="none" stroke="#7FD400" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Sparkline along the bottom, with a soft fill under it -->
+  <path d="M92 134 L114 126 L134 130 L156 118 L178 122 L200 108 L228 102 L228 140 L92 140 Z" fill="#22EEFF" fill-opacity="0.10" />
+  <path d="M92 134 L114 126 L134 130 L156 118 L178 122 L200 108 L228 102" fill="none" stroke="url(#spark)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="228" cy="102" r="4" fill="#B8FF3C" stroke="#7FD400" stroke-width="1.5" />
+  </g>
+
+  <!-- A few floating dots -->
+  <circle cx="48" cy="88" r="3" fill="#A77BFF" opacity="0.6" />
+  <circle cx="22" cy="58" r="1.5" fill="#22EEFF" opacity="0.7" />
+  <circle cx="268" cy="114" r="2.5" fill="#22EEFF" opacity="0.7" />
+  <circle cx="296" cy="72" r="2" fill="#B8FF3C" opacity="0.8" />
+  <circle cx="132" cy="166" r="1.5" fill="#FF6F91" opacity="0.6" />
+</svg>

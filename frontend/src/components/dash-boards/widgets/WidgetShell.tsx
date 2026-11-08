@@ -5,7 +5,7 @@ import {hasLength, useForm} from "@mantine/form"
 import type {WidgetInstance} from "./widget-types"
 import {useEditWidget} from "@/hooks/widgets/useEditWidget"
 import {useDisclosure} from "@mantine/hooks"
-import DeleteWidgetModal from "@/components/modals/DeleteWidgetModal"
+import DeleteWidgetModal from "@/components/modals/widget/DeleteWidgetModal"
 
 export type WidgetShellProps = {
   title: string

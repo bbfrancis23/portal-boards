@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-labelledby="title">
+  <title id="title">Table widget: a header row and striped rows, with one row highlighted</title>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#A77BFF" stop-opacity="0.14" />
+      <stop offset="1" stop-color="#22EEFF" stop-opacity="0.10" />
+    </linearGradient>
+    <linearGradient id="frame" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#A77BFF" />
+      <stop offset="1" stop-color="#22EEFF" />
+    </linearGradient>
+    <clipPath id="inside">
+      <rect x="56" y="26" width="208" height="128" rx="14" />
+    </clipPath>
+  </defs>
+
+  <!-- Soft background -->
+  <rect width="320" height="180" fill="url(#sky)" />
+
+  <!-- The table, shrunk around the center so it has room above and below like the others -->
+  <g transform="translate(160 90) scale(0.8) translate(-160 -90)">
+
+  <!-- Table body -->
+  <rect x="56" y="26" width="208" height="128" rx="14" fill="#ffffff" fill-opacity="0.30" />
+
+  <g clip-path="url(#inside)">
+    <!-- Header row -->
+    <rect x="56" y="26" width="208" height="26" fill="#A77BFF" fill-opacity="0.22" />
+    <!-- Striping on every other row -->
+    <rect x="56" y="78" width="208" height="25.5" fill="#A77BFF" fill-opacity="0.07" />
+    <rect x="56" y="129" width="208" height="25" fill="#A77BFF" fill-opacity="0.07" />
+    <!-- Highlighted (hovered) row -->
+    <rect x="56" y="103.5" width="208" height="25.5" fill="#22EEFF" fill-opacity="0.18" />
+  </g>
+
+  <!-- Row and column lines -->
+  <g stroke="#A77BFF" stroke-width="1" opacity="0.35">
+    <path d="M56 52 H264 M56 78 H264 M56 103.5 H264 M56 129 H264" />
+    <path d="M124 26 V154 M196 26 V154" stroke-dasharray="2 5" stroke-linecap="round" />
+  </g>
+
+  <!-- Header labels and cell values -->
+  <g fill="#A77BFF" fill-opacity="0.55">
+    <rect x="68" y="36" width="40" height="6" rx="3" />
+    <rect x="136" y="36" width="44" height="6" rx="3" />
+    <rect x="208" y="36" width="36" height="6" rx="3" />
+  </g>
+  <g fill="#22EEFF" fill-opacity="0.45">
+    <rect x="68" y="62" width="46" height="6" rx="3" /><rect x="136" y="62" width="34" height="6" rx="3" /><rect x="208" y="62" width="28" height="6" rx="3" />
+    <rect x="68" y="88" width="38" height="6" rx="3" /><rect x="136" y="88" width="48" height="6" rx="3" /><rect x="208" y="88" width="40" height="6" rx="3" />
+    <rect x="68" y="139" width="44" height="6" rx="3" /><rect x="136" y="139" width="30" height="6" rx="3" /><rect x="208" y="139" width="34" height="6" rx="3" />
+  </g>
+  <g fill="#22EEFF" fill-opacity="0.85">
+    <rect x="68" y="113" width="42" height="6" rx="3" /><rect x="136" y="113" width="40" height="6" rx="3" /><rect x="208" y="113" width="32" height="6" rx="3" />
+  </g>
+
+  <!-- Frame -->
+  <rect x="56" y="26" width="208" height="128" rx="14" fill="none" stroke="url(#frame)" stroke-width="2.5" />
+  </g>
+
+  <!-- A few floating dots -->
+  <circle cx="38" cy="98" r="2" fill="#22EEFF" opacity="0.7" />
+  <circle cx="18" cy="146" r="2.5" fill="#FFC24B" opacity="0.7" />
+  <circle cx="284" cy="62" r="3" fill="#A77BFF" opacity="0.6" />
+  <circle cx="204" cy="168" r="1.5" fill="#B8FF3C" opacity="0.8" />
+</svg>

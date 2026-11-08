@@ -47,6 +47,7 @@ def create_portal(
                     w=spec.w,
                     h=spec.h,
                     config=copy.deepcopy(spec.config),
+                    template_key=spec.key,
                 )
                 session.add(widget)
                 created.append((spec, widget))

@@ -11,3 +11,17 @@
     var(--app-shell-aside-offset, 0rem) + var(--modal-inner-x-offset, var(--modal-x-offset))
   );
 }
+
+/* Only the body scrolls. The chrome outline is drawn over the content box, so if the content
+   box scrolled, the outline's bottom edge would scroll up through a long modal. */
+.content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}

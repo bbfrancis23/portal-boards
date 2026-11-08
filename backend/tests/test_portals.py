@@ -101,3 +101,12 @@ def test_template_queries_use_real_widgets_and_fields(template: Template) -> Non
         used = {source.get(name) for name in ("field", "groupBy", "seriesBy", "dateField")}
         used = (used - {None}) | set(source.get("where", {}))
         assert used <= fields, f"{spec.key}: unknown fields {used - fields}"
+
+
+def test_template_widgets_keep_their_template_key(session: Session, user: User) -> None:
+    portal = create_portal(session, user.id, "Atrium", "wellness-studio", today=TODAY)
+
+    template = TEMPLATES["wellness-studio"]
+    template_keys = [spec.key for board in template.boards for spec in board.widgets]
+    widget_keys = [widget.template_key for widget in portal_widgets(session, portal)]
+    assert sorted(widget_keys) == sorted(template_keys)
