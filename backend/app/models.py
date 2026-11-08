@@ -119,6 +119,7 @@ class WidgetInstance(Base):
     y: Mapped[int]
     w: Mapped[int]
     h: Mapped[int]
+    template_key: Mapped[str | None]
     config: Mapped[dict[str, Any]] = mapped_column(default=lambda: {})
     created_at: Mapped[datetime] = mapped_column(default=utcnow)
 

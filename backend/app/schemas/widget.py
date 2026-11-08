@@ -59,6 +59,16 @@ class WidgetUpdate(BaseModel):
     config: dict[str, Any] | None = None
 
 
+class WidgetPresetRead(BaseModel):
+    """A widget from the portal's template that can be added to a board."""
+
+    key: str
+    type: WidgetType
+    title: str
+    description: str
+    table_in_portal: bool
+
+
 class LayoutItem(BaseModel):
     """One widget's position and size, as sent after a drag or resize."""
 

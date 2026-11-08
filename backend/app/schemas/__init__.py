@@ -1,7 +1,14 @@
 from app.schemas.board import BoardCreate, BoardRead, BoardUpdate
 from app.schemas.portal import PortalCreate, PortalRead, PortalUpdate
 from app.schemas.template import TemplateRead
-from app.schemas.widget import LayoutItem, WidgetCreate, WidgetRead, WidgetType, WidgetUpdate
+from app.schemas.widget import (
+    LayoutItem,
+    WidgetCreate,
+    WidgetPresetRead,
+    WidgetRead,
+    WidgetType,
+    WidgetUpdate,
+)
 
 __all__ = [
     "BoardCreate",
@@ -13,6 +20,7 @@ __all__ = [
     "PortalUpdate",
     "TemplateRead",
     "WidgetCreate",
+    "WidgetPresetRead",
     "WidgetRead",
     "WidgetType",
     "WidgetUpdate",

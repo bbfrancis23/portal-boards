@@ -4,7 +4,7 @@ import type {Column, Row} from "./table-types"
 import {IconEdit, IconTrash} from "@tabler/icons-react"
 import {useState} from "react"
 import EditRow from "./EditRow"
-import DeleteRowModal from "@/components/modals/DeleteRowModal"
+import DeleteRowModal from "@/components/modals/widget/DeleteRowModal"
 
 const SavedRow = ({columns, row}: {columns: Column[]; row: Row}) => {
   const [isEditing, setIsEditing] = useState<boolean>(false)
