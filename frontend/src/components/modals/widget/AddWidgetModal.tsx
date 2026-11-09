@@ -8,9 +8,10 @@ type AddWidgetModalProps = {
   onClose: () => void
 }
 
-// Tables first: stats and charts read from them.
+// Tables and schedules first: stats and charts read from them.
 const GROUPS: {type: WidgetPreset["type"]; label: string}[] = [
   {type: "table", label: "Tables"},
+  {type: "schedule", label: "Schedules"},
   {type: "stat", label: "Stats"},
   {type: "chart", label: "Charts"},
 ]

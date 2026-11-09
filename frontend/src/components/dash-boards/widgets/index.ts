@@ -1,5 +1,6 @@
 import ChartWidget from "./ChartWidget"
 import PlaceholderWidget from "./PlaceholderWidget"
+import ScheduleWidget from "./schedule-widget/ScheduleWidget"
 import StatWidget from "./StatWidget"
 import TableWidget from "./table-widget/TableWidget"
 import {widgetRegistry} from "./widget-registry"
@@ -33,7 +34,7 @@ const definitions: WidgetDefinition[] = [
     kind: "input",
     label: "Schedule",
     defaultSize: {w: 12, h: 12},
-    component: PlaceholderWidget,
+    component: ScheduleWidget,
   },
   {
     type: "form",

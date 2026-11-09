@@ -144,12 +144,12 @@ MEMBERS = WidgetSpec(
 SCHEDULE = WidgetSpec(
     key="schedule",
     type="schedule",
-    description="This week's classes and spa appointments.",
+    description="Classes and spa appointments by day, week, month or year.",
     x=0,
     y=0,
     w=12,
     h=12,
-    config={"title": "Week schedule", "dayStartHour": 6, "dayEndHour": 21},
+    config={"title": "Schedule", "dayStartHour": 6, "dayEndHour": 21},
 )
 
 SALES = WidgetSpec(

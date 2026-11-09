@@ -362,15 +362,15 @@ def test_presets_list_the_templates_widgets(client: TestClient) -> None:
         "description": "How many members are active right now.",
         "table_in_portal": False,
     }
-    assert "schedule" not in presets
+    assert presets["schedule"]["type"] == "schedule"
 
 
-def test_tables_already_in_the_portal_are_marked_added(client: TestClient) -> None:
+def test_tables_and_schedules_already_in_the_portal_are_marked_added(client: TestClient) -> None:
     presets = client.get(f"/api/boards/{overview_board_id(client)}/widgets/presets").json()
 
-    tables = [preset for preset in presets if preset["type"] == "table"]
-    assert tables
-    assert all(table["table_in_portal"] for table in tables)
+    inputs = [preset for preset in presets if preset["type"] in ("table", "schedule")]
+    assert {preset["type"] for preset in inputs} == {"table", "schedule"}
+    assert all(preset["table_in_portal"] for preset in inputs)
 
 
 def test_a_deleted_table_can_be_added_again(client: TestClient, session: Session) -> None:
@@ -476,8 +476,30 @@ def test_adding_a_stat_without_its_table_is_409(client: TestClient, session: Ses
     assert response.status_code == 409
 
 
-def test_unknown_or_hidden_presets_are_404(client: TestClient) -> None:
+def test_unknown_presets_are_404(client: TestClient) -> None:
     board_id = overview_board_id(client)
 
     assert client.post(f"/api/boards/{board_id}/widgets/presets/imaginary").status_code == 404
-    assert client.post(f"/api/boards/{board_id}/widgets/presets/schedule").status_code == 404
+
+
+def test_adding_a_schedule_already_in_the_portal_is_409(client: TestClient) -> None:
+    board_id = overview_board_id(client)
+
+    response = client.post(f"/api/boards/{board_id}/widgets/presets/schedule")
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "This schedule is already in the portal"
+
+
+def test_a_deleted_schedule_can_be_added_again(client: TestClient, session: Session) -> None:
+    board_id = overview_board_id(client)
+    client.delete(f"/api/widgets/{widget_with_key(session, 'schedule').id}")
+
+    response = client.post(f"/api/boards/{board_id}/widgets/presets/schedule")
+
+    assert response.status_code == 201
+    assert response.json()["config"] == {
+        "title": "Schedule",
+        "dayStartHour": 6,
+        "dayEndHour": 21,
+    }
