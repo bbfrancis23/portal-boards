@@ -22,8 +22,6 @@ from app.schemas.widget_config import CONFIG_SCHEMAS
 from app.templates import get_template
 from app.templates.types import Template, WidgetSpec
 
-# Hidden from the presets until the schedule widget is built (#59).
-UNBUILT_WIDGET_TYPES = {"schedule"}
 # The widgets that hold rows; stats and charts read from them.
 INPUT_WIDGET_TYPES = {"table", "schedule"}
 
@@ -84,9 +82,9 @@ def missing_source_table(spec: WidgetSpec, widget_ids: dict[str, int]) -> bool:
     return source is not None and source["widget"] not in widget_ids
 
 
-def is_table_in_portal(spec: WidgetSpec, widget_ids: dict[str, int]) -> bool:
-    """A second copy of a table would split its rows between the two."""
-    return spec.type == "table" and spec.key in widget_ids
+def is_input_widget_already_in_portal(spec: WidgetSpec, widget_ids: dict[str, int]) -> bool:
+    """A second copy of a table or schedule would split its rows between the two."""
+    return spec.type in INPUT_WIDGET_TYPES and spec.key in widget_ids
 
 
 def bottom_of_board(session: Session, board: Board) -> int:
@@ -111,16 +109,14 @@ def list_widget_presets(
     presets: dict[str, WidgetPresetRead] = {}
     for board_spec in template.boards:
         for spec in board_spec.widgets:
-            if spec.type in UNBUILT_WIDGET_TYPES or spec.key in presets:
-                continue
-            if missing_source_table(spec, widget_ids):
+            if spec.key in presets or missing_source_table(spec, widget_ids):
                 continue
             presets[spec.key] = WidgetPresetRead(
                 key=spec.key,
                 type=WidgetType(spec.type),
                 title=spec.config.get("title", spec.key),
                 description=spec.description,
-                table_in_portal=is_table_in_portal(spec, widget_ids),
+                table_in_portal=is_input_widget_already_in_portal(spec, widget_ids),
             )
     return list(presets.values())
 
@@ -131,12 +127,12 @@ def add_widget_preset(
 ) -> WidgetRead:
     board = get_owned_board(session, user, board_id)
     spec = find_template_widget(portal_template(session, board), key)
-    if spec is None or spec.type in UNBUILT_WIDGET_TYPES:
+    if spec is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Preset not found")
 
     widget_ids = input_widget_ids(session, board)
-    if is_table_in_portal(spec, widget_ids):
-        raise HTTPException(status.HTTP_409_CONFLICT, "This table is already in the portal")
+    if is_input_widget_already_in_portal(spec, widget_ids):
+        raise HTTPException(status.HTTP_409_CONFLICT, f"This {spec.type} is already in the portal")
     if missing_source_table(spec, widget_ids):
         raise HTTPException(status.HTTP_409_CONFLICT, "This widget's table isn't in the portal")
 
