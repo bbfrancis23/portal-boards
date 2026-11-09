@@ -1,4 +1,8 @@
+from typing import Any
+
+import pytest
 from fastapi.testclient import TestClient
+from httpx import Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -34,9 +38,9 @@ def test_create_widget_without_position_goes_below(client: TestClient) -> None:
     widgets = client.get(f"/api/boards/{overview['id']}/widgets").json()
     bottom = max(widget["y"] + widget["h"] for widget in widgets)
 
-    response = client.post(
-        f"/api/boards/{overview['id']}/widgets", json={"type": "stat", "w": 3, "h": 2}
-    )
+    table = {"type": "table", "w": 6, "h": 4, "config": {"title": "Notes", "columns": []}}
+
+    response = client.post(f"/api/boards/{overview['id']}/widgets", json=table)
 
     assert response.status_code == 201
     widget = response.json()
@@ -61,7 +65,7 @@ def test_update_widget_config_is_saved(client: TestClient) -> None:
     ).json()["id"]
     overview = client.get(f"/api/portals/{portal_id}/boards").json()[0]
     widget = client.get(f"/api/boards/{overview['id']}/widgets").json()[0]
-    config = {"title": "Members today", "source": "members"}
+    config = {**widget["config"], "title": "Members today"}
 
     response = client.patch(f"/api/widgets/{widget['id']}", json={"config": config})
 
@@ -69,6 +73,167 @@ def test_update_widget_config_is_saved(client: TestClient) -> None:
     assert response.json()["config"] == config
     reloaded = client.get(f"/api/boards/{overview['id']}/widgets").json()
     assert next(w for w in reloaded if w["id"] == widget["id"])["config"] == config
+
+
+def overview_stat(client: TestClient) -> dict[str, Any]:
+    portal_id = client.post(
+        "/api/portals", json={"name": "Atrium", "template_id": "wellness-studio"}
+    ).json()["id"]
+    overview = client.get(f"/api/portals/{portal_id}/boards").json()[0]
+    widgets = client.get(f"/api/boards/{overview['id']}/widgets").json()
+    return next(widget for widget in widgets if widget["type"] == "stat")
+
+
+def create_stat(client: TestClient, board_id: int, config: dict[str, Any]) -> Response:
+    return client.post(
+        f"/api/boards/{board_id}/widgets",
+        json={"type": "stat", "w": 3, "h": 2, "config": config},
+    )
+
+
+def test_create_widget_with_a_valid_config_is_201(client: TestClient) -> None:
+    stat = overview_stat(client)
+
+    response = create_stat(client, stat["board_id"], stat["config"])
+
+    assert response.status_code == 201
+    assert response.json()["config"] == stat["config"]
+
+
+def test_create_widget_with_an_unknown_config_key_is_422(client: TestClient) -> None:
+    stat = overview_stat(client)
+    config = {**stat["config"], "colour": "teal"}
+
+    response = create_stat(client, stat["board_id"], config)
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["loc"] == ["body", "config", "colour"]
+
+
+def test_create_widget_with_a_misspelled_source_key_is_422(client: TestClient) -> None:
+    stat = overview_stat(client)
+    source = {**stat["config"]["source"], "feild": "amount"}
+
+    response = create_stat(client, stat["board_id"], {**stat["config"], "source": source})
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["loc"] == ["body", "config", "source", "feild"]
+
+
+def test_create_widget_with_a_bad_config_value_is_422(client: TestClient) -> None:
+    stat = overview_stat(client)
+    source = {**stat["config"]["source"], "aggregate": "total"}
+
+    response = create_stat(client, stat["board_id"], {**stat["config"], "source": source})
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["loc"] == ["body", "config", "source", "aggregate"]
+
+
+def test_create_widget_with_a_number_as_text_is_422(client: TestClient) -> None:
+    stat = overview_stat(client)
+    source = {**stat["config"]["source"], "widget": str(stat["config"]["source"]["widget"])}
+
+    response = create_stat(client, stat["board_id"], {**stat["config"], "source": source})
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["loc"] == ["body", "config", "source", "widget"]
+
+
+def test_create_stat_summing_without_a_field_is_422(client: TestClient) -> None:
+    stat = overview_stat(client)
+    source = {"widget": stat["config"]["source"]["widget"], "aggregate": "sum"}
+
+    response = create_stat(client, stat["board_id"], {**stat["config"], "source": source})
+
+    assert response.status_code == 422
+    problem = response.json()["detail"][0]
+    assert problem["loc"] == ["body", "config", "source"]
+    assert "field is required when aggregate is sum" in problem["msg"]
+
+
+@pytest.mark.parametrize(
+    ("start", "end"),
+    [(30, 18), (-1, 18), (6, 25), (18, 6), (9, 9)],
+    ids=["start-past-24", "start-below-0", "end-past-24", "start-after-end", "no-hours"],
+)
+def test_create_schedule_with_bad_hours_is_422(client: TestClient, start: int, end: int) -> None:
+    board_id = overview_stat(client)["board_id"]
+    config = {"title": "Classes", "dayStartHour": start, "dayEndHour": end}
+
+    response = client.post(
+        f"/api/boards/{board_id}/widgets",
+        json={"type": "schedule", "w": 12, "h": 8, "config": config},
+    )
+
+    assert response.status_code == 422
+
+
+def test_create_widget_without_a_title_is_422(client: TestClient) -> None:
+    stat = overview_stat(client)
+    config = {key: value for key, value in stat["config"].items() if key != "title"}
+
+    response = create_stat(client, stat["board_id"], config)
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["loc"] == ["body", "config", "title"]
+
+
+def test_update_widget_with_a_bad_config_is_422_and_not_saved(client: TestClient) -> None:
+    stat = overview_stat(client)
+    config = {**stat["config"], "format": "percent"}
+
+    response = client.patch(f"/api/widgets/{stat['id']}", json={"config": config})
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["loc"] == ["body", "config", "format"]
+    reloaded = client.get(f"/api/boards/{stat['board_id']}/widgets").json()
+    assert next(w for w in reloaded if w["id"] == stat["id"])["config"] == stat["config"]
+
+
+def with_source_widget(stat: dict[str, Any], widget_id: int) -> dict[str, Any]:
+    return {**stat["config"], "source": {**stat["config"]["source"], "widget": widget_id}}
+
+
+def assert_bad_source_widget(response: Response) -> None:
+    assert response.status_code == 422
+    problem = response.json()["detail"][0]
+    assert problem["loc"] == ["body", "config", "source", "widget"]
+    assert problem["msg"] == "source.widget must be a table or schedule in this portal"
+
+
+def test_create_stat_reading_a_stat_is_422(client: TestClient) -> None:
+    stat = overview_stat(client)
+
+    response = create_stat(client, stat["board_id"], with_source_widget(stat, stat["id"]))
+
+    assert_bad_source_widget(response)
+
+
+def test_create_stat_reading_a_table_in_another_portal_is_422(client: TestClient) -> None:
+    stat = overview_stat(client)
+    other_table = overview_stat(client)["config"]["source"]["widget"]
+
+    response = create_stat(client, stat["board_id"], with_source_widget(stat, other_table))
+
+    assert_bad_source_widget(response)
+
+
+def test_create_stat_reading_a_missing_widget_is_422(client: TestClient) -> None:
+    stat = overview_stat(client)
+
+    response = create_stat(client, stat["board_id"], with_source_widget(stat, 999_999))
+
+    assert_bad_source_widget(response)
+
+
+def test_update_stat_to_read_a_stat_is_422(client: TestClient) -> None:
+    stat = overview_stat(client)
+    config = with_source_widget(stat, stat["id"])
+
+    response = client.patch(f"/api/widgets/{stat['id']}", json={"config": config})
+
+    assert_bad_source_widget(response)
 
 
 def test_update_changes_only_what_was_sent(client: TestClient) -> None:

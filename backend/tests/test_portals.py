@@ -1,10 +1,14 @@
+import copy
 from datetime import date
 
 import pytest
+from pydantic import ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import Board, Portal, User, WidgetData, WidgetInstance
+from app.schemas.widget import WidgetType
+from app.schemas.widget_config import CONFIG_SCHEMAS
 from app.services.portals_service import create_portal
 from app.templates import TEMPLATES
 from app.templates.types import Template
@@ -12,6 +16,8 @@ from app.templates.wellness_studio import generate_sample_data
 
 TODAY = date(2026, 10, 7)
 INPUT_WIDGET_TYPES = {"table", "schedule"}
+# Templates name their source widget by key; a real portal swaps in the widget's id.
+STAND_IN_WIDGET_ID = 1
 
 
 def portal_widgets(session: Session, portal: Portal) -> list[WidgetInstance]:
@@ -101,6 +107,19 @@ def test_template_queries_use_real_widgets_and_fields(template: Template) -> Non
         used = {source.get(name) for name in ("field", "groupBy", "seriesBy", "dateField")}
         used = (used - {None}) | set(source.get("where", {}))
         assert used <= fields, f"{spec.key}: unknown fields {used - fields}"
+
+
+@pytest.mark.parametrize("template", TEMPLATES.values(), ids=lambda template: template.id)
+def test_every_template_widget_config_matches_its_schema(template: Template) -> None:
+    for spec in (spec for board in template.boards for spec in board.widgets):
+        config = copy.deepcopy(spec.config)
+        if "source" in config:
+            config["source"]["widget"] = STAND_IN_WIDGET_ID
+
+        try:
+            CONFIG_SCHEMAS[WidgetType(spec.type)].model_validate(config, strict=True)
+        except ValidationError as error:
+            pytest.fail(f"{spec.key}: {error}")
 
 
 def test_template_widgets_keep_their_template_key(session: Session, user: User) -> None:

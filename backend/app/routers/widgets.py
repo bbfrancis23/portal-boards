@@ -1,6 +1,9 @@
 import copy
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, status
+from fastapi.exceptions import RequestValidationError
+from pydantic import ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -15,6 +18,7 @@ from app.schemas import (
     WidgetType,
     WidgetUpdate,
 )
+from app.schemas.widget_config import CONFIG_SCHEMAS
 from app.templates import get_template
 from app.templates.types import Template, WidgetSpec
 
@@ -157,11 +161,50 @@ def add_widget_preset(
     return WidgetRead.model_validate(widget)
 
 
+def is_input_widget_in_portal(session: Session, widget_id: int, portal_id: int) -> bool:
+    statement = (
+        select(WidgetInstance.id)
+        .join(Board)
+        .where(
+            WidgetInstance.id == widget_id,
+            WidgetInstance.type.in_(INPUT_WIDGET_TYPES),
+            Board.portal_id == portal_id,
+        )
+    )
+    return session.scalar(statement) is not None
+
+
+def validate_config(
+    session: Session, board: Board, widget_type: WidgetType, config: dict[str, Any]
+) -> None:
+    """Raises the same 422 FastAPI gives for a bad request body, pointing into the config."""
+    try:
+        CONFIG_SCHEMAS[widget_type].model_validate(config, strict=True)
+    except ValidationError as error:
+        raise RequestValidationError(
+            [{**problem, "loc": ("body", "config", *problem["loc"])} for problem in error.errors()]
+        ) from error
+
+    source = config.get("source")
+    if source and not is_input_widget_in_portal(session, source["widget"], board.portal_id):
+        raise RequestValidationError(
+            [
+                {
+                    "type": "source_widget",
+                    "loc": ("body", "config", "source", "widget"),
+                    "msg": "source.widget must be a table or schedule in this portal",
+                    "input": source["widget"],
+                }
+            ]
+        )
+
+
 @routerBoard.post("", status_code=status.HTTP_201_CREATED)
 def create_widget(
     board_id: int, session: SessionDep, user: CurrentUserDep, data: WidgetCreate
 ) -> WidgetRead:
     board = get_owned_board(session, user, board_id)
+    validate_config(session, board, data.type, data.config)
     widget = WidgetInstance(
         board_id=board_id,
         type=data.type,
@@ -185,7 +228,7 @@ def update_widget(
     widget = session.get(WidgetInstance, widget_id)
     if widget is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Widget not found")
-    get_owned_board(session, user, widget.board_id)
+    board = get_owned_board(session, user, widget.board_id)
     if data.x is not None:
         widget.x = data.x
     if data.y is not None:
@@ -195,6 +238,7 @@ def update_widget(
     if data.h is not None:
         widget.h = data.h
     if data.config is not None:
+        validate_config(session, board, WidgetType(widget.type), data.config)
         widget.config = data.config
     session.commit()
     session.refresh(widget)

@@ -108,12 +108,9 @@ def test_create_widget_data_on_a_stat_widget_is_422(client: TestClient) -> None:
         "/api/portals", json={"name": "Atrium", "template_id": "wellness-studio"}
     ).json()["id"]
     overview = client.get(f"/api/portals/{portal_id}/boards").json()[0]
+    widgets = client.get(f"/api/boards/{overview['id']}/widgets").json()
+    widget = next(widget for widget in widgets if widget["type"] == "stat")
 
-    response = client.post(
-        f"/api/boards/{overview['id']}/widgets", json={"type": "stat", "w": 3, "h": 2}
-    )
-
-    widget = response.json()
     response = client.post(
         f"/api/boards/{widget['board_id']}/widgets/{widget['id']}/data",
         json={"data": {"quote": "Run, runner"}},
