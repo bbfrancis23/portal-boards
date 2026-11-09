@@ -5,6 +5,7 @@ Diagrams that explain the app from three points of view. Pick the page that fits
 | Page | For | What it shows |
 |---|---|---|
 | [Developers](developers.md) | Programmers working on the code | Architecture, request lifecycle, data model, log-in, templates, widget rendering, CI and deploy |
+| [Code map](code-map.md) | Programmers learning the code | Which files and libraries do what, and how: FastAPI, SQLAlchemy, Alembic, Pydantic, log-in, services, React Router, the API client and TanStack Query, Mantine, widgets, CI and deploy |
 | [Non-programmers](non-programmers.md) | Anyone curious how it works, no code needed | The big picture in plain words, how things fit together, templates, live charts |
 | [Users](users.md) | People using the app | Getting started, working on a board, organizing portals and boards, what's coming |
 
