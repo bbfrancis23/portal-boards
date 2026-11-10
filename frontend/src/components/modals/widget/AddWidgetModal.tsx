@@ -67,10 +67,10 @@ const AddWidgetModal = ({opened, onClose}: AddWidgetModalProps) => {
                     <Button
                       fullWidth
                       mt="md"
-                      disabled={preset.table_in_portal}
+                      disabled={preset.data_widget_in_portal}
                       loading={isAdding(preset.key)}
                       onClick={() => add(preset.key)}>
-                      {preset.table_in_portal ? "Already added" : "Add"}
+                      {preset.data_widget_in_portal ? "Already added" : "Add"}
                     </Button>
                   </Box>
                 </Card>

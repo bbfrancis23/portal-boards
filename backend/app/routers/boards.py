@@ -1,17 +1,17 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 from sqlalchemy import func, select
 
 from app.auth import CurrentUserDep
 from app.db import SessionDep
 from app.models import Board
-from app.routers.portals import get_owned_portal
+from app.ownership import get_owned_board, get_owned_portal
 from app.schemas import BoardCreate, BoardRead, BoardUpdate
 
-routerPortal = APIRouter(prefix="/api/portals/{portal_id}/boards", tags=["boards"])
-routerBoard = APIRouter(prefix="/api/boards/{board_id}", tags=["boards"])
+router_portal = APIRouter(prefix="/api/portals/{portal_id}/boards", tags=["boards"])
+router_board = APIRouter(prefix="/api/boards/{board_id}", tags=["boards"])
 
 
-@routerPortal.get("")
+@router_portal.get("")
 def list_boards(session: SessionDep, user: CurrentUserDep, portal_id: int) -> list[BoardRead]:
     # 404 for someone else's portal, like every other route (not an empty list).
     portal = get_owned_portal(session, user, portal_id)
@@ -19,7 +19,7 @@ def list_boards(session: SessionDep, user: CurrentUserDep, portal_id: int) -> li
     return [BoardRead.model_validate(board) for board in session.scalars(statement)]
 
 
-@routerPortal.post("", status_code=status.HTTP_201_CREATED)
+@router_portal.post("", status_code=status.HTTP_201_CREATED)
 def create_board(
     session: SessionDep, user: CurrentUserDep, data: BoardCreate, portal_id: int
 ) -> BoardRead:
@@ -35,14 +35,11 @@ def create_board(
     return BoardRead.model_validate(board)
 
 
-@routerBoard.patch("")
+@router_board.patch("")
 def update_board(
     board_id: int, data: BoardUpdate, session: SessionDep, user: CurrentUserDep
 ) -> BoardRead:
-    board = session.get(Board, board_id)
-    if board is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Board not found")
-    get_owned_portal(session, user, board.portal_id)
+    board = get_owned_board(session, user, board_id)
 
     if data.label is not None:
         board.label = data.label
@@ -53,11 +50,9 @@ def update_board(
     return BoardRead.model_validate(board)
 
 
-@routerBoard.delete("", status_code=status.HTTP_204_NO_CONTENT)
+@router_board.delete("", status_code=status.HTTP_204_NO_CONTENT)
 def delete_board(board_id: int, session: SessionDep, user: CurrentUserDep) -> None:
-    board = session.get(Board, board_id)
-    if board is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Board not found")
-    get_owned_portal(session, user, board.portal_id)
+    board = get_owned_board(session, user, board_id)
+
     session.delete(board)
     session.commit()

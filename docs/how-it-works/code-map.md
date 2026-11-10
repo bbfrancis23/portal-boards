@@ -63,10 +63,12 @@ flowchart TD
     Main -- "include_router" --> R2["routers/boards.py"]
     Main -- "include_router" --> R3["routers/widgets.py"]
     Main -- "include_router" --> R4["routers/widget_data.py"]
+    Main -- "include_router" --> R7["routers/widget_presets.py"]
     Main -- "include_router" --> R5["routers/auth.py"]
     Main -- "include_router" --> R6["routers/templates.py"]
     R3 -- "Depends" --> SD["db.py · SessionDep"]
     R3 -- "Depends" --> CU["auth.py · CurrentUserDep"]
+    R3 -- "calls" --> OW["ownership.py · get_owned_board()"]
 ```
 
 **How it does it**
@@ -77,13 +79,13 @@ flowchart TD
 # backend/app/main.py
 app = FastAPI(title="portal-boards", lifespan=lifespan)
 app.include_router(portals.router)
-app.include_router(widgets.routerBoard)
-app.include_router(widgets.routerWidget)
+app.include_router(widgets.router_board)
+app.include_router(widgets.router_widget)
 ```
 
 ```python
 # backend/app/routers/widgets.py
-routerBoard = APIRouter(prefix="/api/boards/{board_id}/widgets", tags=["widgets"])
+router_board = APIRouter(prefix="/api/boards/{board_id}/widgets", tags=["widgets"])
 ```
 
 A route is a plain function. FastAPI reads its parameters and fills them in:
@@ -92,7 +94,7 @@ A route is a plain function. FastAPI reads its parameters and fills them in:
 - `session: SessionDep` and `user: CurrentUserDep` are **dependencies**: FastAPI calls a function and passes in what it returns.
 
 ```python
-@routerBoard.get("")
+@router_board.get("")
 def list_widgets(board_id: int, session: SessionDep, user: CurrentUserDep) -> list[WidgetRead]:
     board = get_owned_board(session, user, board_id)
     ...
@@ -111,9 +113,10 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 The return type (`-> list[WidgetRead]`) tells FastAPI how to turn the result into JSON and how to describe it in the OpenAPI spec at `/openapi.json` (browse it at `http://localhost:8000/docs`).
 
-**Ownership checks** are ordinary functions that raise `HTTPException`. Another user's board gets a 404, not a 403, so ids can't be probed:
+**Ownership checks** are ordinary functions that raise `HTTPException`. They all live in `ownership.py`, so routers never import from each other. Another user's board gets a 404, not a 403, so ids can't be probed:
 
 ```python
+# backend/app/ownership.py
 def get_owned_board(session: Session, user: User, board_id: int) -> Board:
     board = session.scalar(
         select(Board).join(Portal).where(Board.id == board_id, Portal.owner_id == user.id)
@@ -123,7 +126,7 @@ def get_owned_board(session: Session, user: User, board_id: int) -> Board:
     return board
 ```
 
-**Start here:** a new endpoint goes in the router for its resource. A new router also needs an `include_router` line in `main.py`.
+**Start here:** a new endpoint goes in the router for its resource. A new router also needs an `include_router` line in `main.py`. A helper that more than one router needs goes in `ownership.py` (ownership checks) or a service, never in a router.
 
 ---
 
@@ -187,7 +190,7 @@ widgets = session.scalars(statement)        # SELECT … FROM widget_instances W
 
 - `session.scalars(...)` gives many objects, and `session.scalar(...)` gives one (or `None`).
 - `session.get(Portal, portal_id)` looks one up by primary key.
-- `session.execute(...)` returns plain rows, for when you select columns instead of whole objects (`input_widget_ids` in `routers/widgets.py` does this).
+- `session.execute(...)` returns plain rows, for when you select columns instead of whole objects (`data_widget_ids` in `routers/widget_presets.py` does this).
 - Joins are written out with `.join(Board)`; SQLAlchemy works out the `ON` from the foreign key. The models don't use `relationship()`.
 
 *Writing: change objects, then commit.*
@@ -379,12 +382,14 @@ On the frontend, `useCurrentUser` calls `GET /api/users/me`, and `RequireAuth` w
 ---
 
 ## 7. Services and templates
-**Plain Python, no extra library.** **Files:** `backend/app/services/portals_service.py`, `backend/app/services/users_service.py`, `backend/app/templates/types.py`, `backend/app/templates/wellness_studio.py`, `backend/app/templates/__init__.py`.
+**Plain Python, no extra library.** **Files:** `backend/app/services/portals_service.py`, `backend/app/services/users_service.py`, `backend/app/services/widgets_service.py`, `backend/app/templates/types.py`, `backend/app/templates/wellness_studio.py`, `backend/app/templates/__init__.py`.
 
 ```mermaid
 flowchart LR
     PR["routers/portals.py<br/>POST /api/portals"] --> PS["services/portals_service.py<br/>create_portal()"]
-    WR["routers/widgets.py<br/>presets endpoints"] --> T
+    WR["routers/widget_presets.py<br/>presets endpoints"] --> T
+    WR --> WSv["services/widgets_service.py<br/>bottom_of_board()"]
+    W["routers/widgets.py<br/>create widget"] --> WSv
     AR["routers/auth.py"] --> US["services/users_service.py"]
     PS --> T["templates/__init__.py<br/>TEMPLATES, get_template()"]
     T --> WS["templates/wellness_studio.py<br/>WELLNESS_STUDIO"]

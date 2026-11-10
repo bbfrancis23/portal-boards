@@ -1,23 +1,14 @@
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 from app.auth import CurrentUserDep
 from app.db import SessionDep
-from app.models import Portal, User
+from app.models import Portal
+from app.ownership import get_owned_portal
 from app.schemas import PortalCreate, PortalRead, PortalUpdate
 from app.services import portals_service
 
 router = APIRouter(prefix="/api/portals", tags=["portals"])
-
-
-def get_owned_portal(session: Session, user: User, portal_id: int) -> Portal:
-    """Load a portal the user owns, or 404.
-    Other users' portals also get 404, so they can't be discovered."""
-    portal = session.get(Portal, portal_id)
-    if portal is None or portal.owner_id != user.id:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Portal not found")
-    return portal
 
 
 @router.get("")

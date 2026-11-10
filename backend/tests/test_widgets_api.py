@@ -360,7 +360,7 @@ def test_presets_list_the_templates_widgets(client: TestClient) -> None:
         "type": "stat",
         "title": "Active members",
         "description": "How many members are active right now.",
-        "table_in_portal": False,
+        "data_widget_in_portal": False,
     }
     assert presets["schedule"]["type"] == "schedule"
 
@@ -368,9 +368,9 @@ def test_presets_list_the_templates_widgets(client: TestClient) -> None:
 def test_tables_and_schedules_already_in_the_portal_are_marked_added(client: TestClient) -> None:
     presets = client.get(f"/api/boards/{overview_board_id(client)}/widgets/presets").json()
 
-    inputs = [preset for preset in presets if preset["type"] in ("table", "schedule")]
-    assert {preset["type"] for preset in inputs} == {"table", "schedule"}
-    assert all(preset["table_in_portal"] for preset in inputs)
+    data_widgets = [preset for preset in presets if preset["type"] in ("table", "schedule")]
+    assert {preset["type"] for preset in data_widgets} == {"table", "schedule"}
+    assert all(preset["data_widget_in_portal"] for preset in data_widgets)
 
 
 def test_a_deleted_table_can_be_added_again(client: TestClient, session: Session) -> None:
@@ -382,7 +382,7 @@ def test_a_deleted_table_can_be_added_again(client: TestClient, session: Session
     presets = client.get(f"/api/boards/{board_id}/widgets/presets").json()
 
     sales_preset = next(preset for preset in presets if preset["key"] == "sales")
-    assert sales_preset["table_in_portal"] is False
+    assert sales_preset["data_widget_in_portal"] is False
 
 
 def test_stats_and_charts_need_their_table(client: TestClient, session: Session) -> None:

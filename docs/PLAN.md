@@ -173,6 +173,7 @@ Since 2026-10-18 the roadmap is organized **by feature**: each milestone mixes b
 
 ## Open questions (decide later)
 - **Delete or archive?** Deleting a portal (or dashboard) is a real delete today: the row and everything beneath it (dashboards, widgets, data rows) are removed through cascades, with only a confirm dialog as protection. A portal is a whole business's data, so before real users arrive, decide whether to switch to a **soft delete**: an `archived_at` column hidden from every query, a "Recently deleted" list to restore from, and a cleanup job that removes items for good after about 30 days. Raised 2026-10-24 while building delete in #26.
+- **Do we need a form widget?** For the owner, no: the add modals on tables and schedules already enter rows. A form widget earns its place only when someone *other* than the owner fills it in, such as a client booking a spa appointment, a new member's intake form or a visitor signing up for a class, with each submission saved as a row in the owner's table or schedule. That needs shared or public portals, which don't exist yet (every portal is private to its owner). Until then the `form` type stays a stub that stores no rows. Decide when shared or public portals come up. Raised 2026-11-10 in #166.
 - **Preview environment.** PR previews share the production database and can't log in (the OAuth callbacks only point at production), so new pages can only be fully checked on production after merging. Consider a separate preview database and preview-friendly log-in.
 
 ## Verification

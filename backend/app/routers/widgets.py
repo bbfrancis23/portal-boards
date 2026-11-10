@@ -1,45 +1,31 @@
-import copy
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, status
 from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.auth import CurrentUserDep
 from app.db import SessionDep
-from app.models import Board, Portal, User, WidgetInstance
+from app.models import Board, WidgetInstance
+from app.ownership import get_owned_board, get_owned_widget_by_id
 from app.schemas import (
+    CONFIG_SCHEMAS,
+    DATA_WIDGET_TYPES,
     LayoutItem,
     WidgetCreate,
-    WidgetPresetRead,
     WidgetRead,
     WidgetType,
     WidgetUpdate,
 )
-from app.schemas.widget_config import CONFIG_SCHEMAS
-from app.templates import get_template
-from app.templates.types import Template, WidgetSpec
+from app.services.widgets_service import bottom_of_board
 
-# The widgets that hold rows; stats and charts read from them.
-INPUT_WIDGET_TYPES = {"table", "schedule"}
-
-routerBoard = APIRouter(prefix="/api/boards/{board_id}/widgets", tags=["widgets"])
-routerWidget = APIRouter(prefix="/api/widgets/{widget_id}", tags=["widgets"])
+router_board = APIRouter(prefix="/api/boards/{board_id}/widgets", tags=["widgets"])
+router_widget = APIRouter(prefix="/api/widgets/{widget_id}", tags=["widgets"])
 
 
-def get_owned_board(session: Session, user: User, board_id: int) -> Board:
-    """Load a board whose portal the user owns, or 404 (also for other users' boards)."""
-    board = session.scalar(
-        select(Board).join(Portal).where(Board.id == board_id, Portal.owner_id == user.id)
-    )
-    if board is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Board not found")
-    return board
-
-
-@routerBoard.get("")
+@router_board.get("")
 def list_widgets(board_id: int, session: SessionDep, user: CurrentUserDep) -> list[WidgetRead]:
     board = get_owned_board(session, user, board_id)
     statement = (
@@ -50,120 +36,13 @@ def list_widgets(board_id: int, session: SessionDep, user: CurrentUserDep) -> li
     return [WidgetRead.model_validate(widget) for widget in session.scalars(statement)]
 
 
-def portal_template(session: Session, board: Board) -> Template | None:
-    portal = session.get_one(Portal, board.portal_id)
-    return get_template(portal.template_id) if portal.template_id else None
-
-
-def find_template_widget(template: Template | None, key: str) -> WidgetSpec | None:
-    if template is None:
-        return None
-    specs = (spec for board_spec in template.boards for spec in board_spec.widgets)
-    return next((spec for spec in specs if spec.key == key), None)
-
-
-def input_widget_ids(session: Session, board: Board) -> dict[str, int]:
-    """The portal's tables and schedules (the widgets stats and charts read), by template key."""
-    rows = session.execute(
-        select(WidgetInstance.template_key, WidgetInstance.id)
-        .join(Board)
-        .where(
-            Board.portal_id == board.portal_id,
-            WidgetInstance.template_key.is_not(None),
-            WidgetInstance.type.in_(INPUT_WIDGET_TYPES),
-        )
-    )
-    return {key: widget_id for key, widget_id in rows if key is not None}
-
-
-def missing_source_table(spec: WidgetSpec, widget_ids: dict[str, int]) -> bool:
-    """A stat or chart would have nothing to read without its table."""
-    source = spec.config.get("source")
-    return source is not None and source["widget"] not in widget_ids
-
-
-def is_input_widget_already_in_portal(spec: WidgetSpec, widget_ids: dict[str, int]) -> bool:
-    """A second copy of a table or schedule would split its rows between the two."""
-    return spec.type in INPUT_WIDGET_TYPES and spec.key in widget_ids
-
-
-def bottom_of_board(session: Session, board: Board) -> int:
-    lowest_edge = session.scalar(
-        select(func.max(WidgetInstance.y + WidgetInstance.h)).where(
-            WidgetInstance.board_id == board.id
-        )
-    )
-    return lowest_edge or 0
-
-
-@routerBoard.get("/presets")
-def list_widget_presets(
-    board_id: int, session: SessionDep, user: CurrentUserDep
-) -> list[WidgetPresetRead]:
-    board = get_owned_board(session, user, board_id)
-    template = portal_template(session, board)
-    if template is None:
-        return []
-
-    widget_ids = input_widget_ids(session, board)
-    presets: dict[str, WidgetPresetRead] = {}
-    for board_spec in template.boards:
-        for spec in board_spec.widgets:
-            if spec.key in presets or missing_source_table(spec, widget_ids):
-                continue
-            presets[spec.key] = WidgetPresetRead(
-                key=spec.key,
-                type=WidgetType(spec.type),
-                title=spec.config.get("title", spec.key),
-                description=spec.description,
-                table_in_portal=is_input_widget_already_in_portal(spec, widget_ids),
-            )
-    return list(presets.values())
-
-
-@routerBoard.post("/presets/{key}", status_code=status.HTTP_201_CREATED)
-def add_widget_preset(
-    board_id: int, key: str, session: SessionDep, user: CurrentUserDep
-) -> WidgetRead:
-    board = get_owned_board(session, user, board_id)
-    spec = find_template_widget(portal_template(session, board), key)
-    if spec is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Preset not found")
-
-    widget_ids = input_widget_ids(session, board)
-    if is_input_widget_already_in_portal(spec, widget_ids):
-        raise HTTPException(status.HTTP_409_CONFLICT, f"This {spec.type} is already in the portal")
-    if missing_source_table(spec, widget_ids):
-        raise HTTPException(status.HTTP_409_CONFLICT, "This widget's table isn't in the portal")
-
-    config = copy.deepcopy(spec.config)
-    source = config.get("source")
-    if source is not None:
-        source["widget"] = widget_ids[source["widget"]]
-
-    widget = WidgetInstance(
-        board_id=board.id,
-        type=spec.type,
-        x=0,
-        y=bottom_of_board(session, board),
-        w=spec.w,
-        h=spec.h,
-        config=config,
-        template_key=spec.key,
-    )
-    session.add(widget)
-    session.commit()
-    session.refresh(widget)
-    return WidgetRead.model_validate(widget)
-
-
-def is_input_widget_in_portal(session: Session, widget_id: int, portal_id: int) -> bool:
+def is_data_widget_in_portal(session: Session, widget_id: int, portal_id: int) -> bool:
     statement = (
         select(WidgetInstance.id)
         .join(Board)
         .where(
             WidgetInstance.id == widget_id,
-            WidgetInstance.type.in_(INPUT_WIDGET_TYPES),
+            WidgetInstance.type.in_(DATA_WIDGET_TYPES),
             Board.portal_id == portal_id,
         )
     )
@@ -182,7 +61,7 @@ def validate_config(
         ) from error
 
     source = config.get("source")
-    if source and not is_input_widget_in_portal(session, source["widget"], board.portal_id):
+    if source and not is_data_widget_in_portal(session, source["widget"], board.portal_id):
         raise RequestValidationError(
             [
                 {
@@ -195,7 +74,7 @@ def validate_config(
         )
 
 
-@routerBoard.post("", status_code=status.HTTP_201_CREATED)
+@router_board.post("", status_code=status.HTTP_201_CREATED)
 def create_widget(
     board_id: int, session: SessionDep, user: CurrentUserDep, data: WidgetCreate
 ) -> WidgetRead:
@@ -217,7 +96,7 @@ def create_widget(
     return WidgetRead.model_validate(widget)
 
 
-@routerWidget.patch("")
+@router_widget.patch("")
 def update_widget(
     widget_id: int, data: WidgetUpdate, session: SessionDep, user: CurrentUserDep
 ) -> WidgetRead:
@@ -241,17 +120,14 @@ def update_widget(
     return WidgetRead.model_validate(widget)
 
 
-@routerWidget.delete("", status_code=status.HTTP_204_NO_CONTENT)
+@router_widget.delete("", status_code=status.HTTP_204_NO_CONTENT)
 def delete_widget(widget_id: int, session: SessionDep, user: CurrentUserDep) -> None:
-    widget = session.get(WidgetInstance, widget_id)
-    if widget is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Widget not found")
-    get_owned_board(session, user, widget.board_id)
+    widget = get_owned_widget_by_id(session, user, widget_id)
     session.delete(widget)
     session.commit()
 
 
-@routerBoard.patch("/layout")
+@router_board.patch("/layout")
 def update_layout(
     board_id: int, data: list[LayoutItem], session: SessionDep, user: CurrentUserDep
 ) -> list[WidgetRead]:

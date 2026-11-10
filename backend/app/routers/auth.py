@@ -8,8 +8,8 @@ from app.auth import CurrentUserDep, clear_session_cookie, set_session_cookie
 from app.config import get_settings
 from app.db import SessionDep
 from app.oauth import oauth
+from app.ownership import get_owned_portal
 from app.rate_limit import AUTH_LIMIT, limiter
-from app.routers.portals import get_owned_portal
 from app.schemas.portal import DefaultPortalUpdate
 from app.schemas.user import UserRead
 from app.services.users_service import find_or_create_oauth_user

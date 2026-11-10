@@ -10,7 +10,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.config import get_settings, require_secret
 from app.db import SessionDep
 from app.rate_limit import limiter
-from app.routers import auth, boards, portals, templates, widget_data, widgets
+from app.routers import auth, boards, portals, templates, widget_data, widget_presets, widgets
 
 
 @asynccontextmanager
@@ -40,12 +40,13 @@ app.add_middleware(
 )
 app.include_router(templates.router)
 app.include_router(portals.router)
-app.include_router(boards.routerPortal)
-app.include_router(boards.routerBoard)
-app.include_router(widgets.routerBoard)
-app.include_router(widgets.routerWidget)
-app.include_router(widget_data.routerBoard)
-app.include_router(widget_data.routerWidget)
+app.include_router(boards.router_portal)
+app.include_router(boards.router_board)
+app.include_router(widgets.router_board)
+app.include_router(widgets.router_widget)
+app.include_router(widget_presets.router_board)
+app.include_router(widget_data.router_board)
+app.include_router(widget_data.router_widget)
 app.include_router(auth.router)
 
 

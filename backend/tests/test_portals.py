@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import Board, Portal, User, WidgetData, WidgetInstance
-from app.schemas.widget import WidgetType
+from app.schemas.widget import DATA_WIDGET_TYPES, WidgetType
 from app.schemas.widget_config import CONFIG_SCHEMAS
 from app.services.portals_service import create_portal
 from app.templates import TEMPLATES
@@ -15,7 +15,6 @@ from app.templates.types import Template
 from app.templates.wellness_studio import generate_sample_data
 
 TODAY = date(2026, 10, 7)
-INPUT_WIDGET_TYPES = {"table", "schedule"}
 # Templates name their source widget by key; a real portal swaps in the widget's id.
 STAND_IN_WIDGET_ID = 1
 
@@ -101,7 +100,7 @@ def test_template_queries_use_real_widgets_and_fields(template: Template) -> Non
             continue
         target = by_key.get(source["widget"])
         assert target is not None, f"{spec.key}: unknown widget {source['widget']!r}"
-        assert target.type in INPUT_WIDGET_TYPES, f"{spec.key}: source is not an input widget"
+        assert target.type in DATA_WIDGET_TYPES, f"{spec.key}: source is not a data widget"
 
         fields = {field for row in sample[target.key] for field in row}
         used = {source.get(name) for name in ("field", "groupBy", "seriesBy", "dateField")}
