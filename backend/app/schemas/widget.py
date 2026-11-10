@@ -13,6 +13,9 @@ class WidgetType(StrEnum):
     SCHEDULE = "schedule"
 
 
+DATA_WIDGET_TYPES = {WidgetType.TABLE, WidgetType.SCHEDULE}
+
+
 class WidgetCreate(BaseModel):
     type: WidgetType
     x: int | None = Field(default=None, ge=0)
@@ -66,7 +69,7 @@ class WidgetPresetRead(BaseModel):
     type: WidgetType
     title: str
     description: str
-    table_in_portal: bool
+    data_widget_in_portal: bool
 
 
 class LayoutItem(BaseModel):

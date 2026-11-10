@@ -114,7 +114,7 @@ PRICES = {"Monthly unlimited": 149, "10-class pack": 200, "Drop-in": 25}
 SPA_MEMBER_DISCOUNT = 0.15
 
 
-# Input widgets: the only widgets that hold data rows.
+# Data widgets: the only widgets that hold data rows.
 
 MEMBERS = WidgetSpec(
     key="members",
@@ -177,7 +177,7 @@ SALES = WidgetSpec(
     },
 )
 
-# Output widgets: charts and stats hold no rows; their "source" is a query over an input widget.
+# Stats and charts: they hold no rows; their "source" is a query over a data widget.
 
 OVERVIEW = BoardSpec(
     label="Overview",
@@ -533,7 +533,7 @@ def _sales(  # noqa: C901 (tech debt: split it, #96)
 
 
 def generate_sample_data(today: date) -> SampleData:
-    """Sample rows for each input widget, generated relative to today."""
+    """Sample rows for each data widget, generated relative to today."""
     rng = random.Random(42)
     members = _members(rng, today)
     return {

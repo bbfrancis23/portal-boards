@@ -111,40 +111,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/boards/{board_id}/widgets/presets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Widget Presets */
-        get: operations["list_widget_presets_api_boards__board_id__widgets_presets_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/boards/{board_id}/widgets/presets/{key}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Add Widget Preset */
-        post: operations["add_widget_preset_api_boards__board_id__widgets_presets__key__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/boards/{board_id}/widgets/layout": {
         parameters: {
             query?: never;
@@ -178,6 +144,40 @@ export interface paths {
         head?: never;
         /** Update Widget */
         patch: operations["update_widget_api_widgets__widget_id__patch"];
+        trace?: never;
+    };
+    "/api/boards/{board_id}/widgets/presets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Widget Presets */
+        get: operations["list_widget_presets_api_boards__board_id__widgets_presets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/boards/{board_id}/widgets/presets/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Widget Preset */
+        post: operations["add_widget_preset_api_boards__board_id__widgets_presets__key__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/boards/{board_id}/widgets/{widget_id}/data": {
@@ -557,8 +557,8 @@ export interface components {
             title: string;
             /** Description */
             description: string;
-            /** Table In Portal */
-            table_in_portal: boolean;
+            /** Data Widget In Portal */
+            data_widget_in_portal: boolean;
         };
         /** WidgetRead */
         WidgetRead: {
@@ -979,73 +979,6 @@ export interface operations {
             };
         };
     };
-    list_widget_presets_api_boards__board_id__widgets_presets_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                board_id: number;
-            };
-            cookie?: {
-                pb_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WidgetPresetRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    add_widget_preset_api_boards__board_id__widgets_presets__key__post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                board_id: number;
-                key: string;
-            };
-            cookie?: {
-                pb_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WidgetRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     update_layout_api_boards__board_id__widgets_layout_patch: {
         parameters: {
             query?: never;
@@ -1133,6 +1066,73 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_widget_presets_api_boards__board_id__widgets_presets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                board_id: number;
+            };
+            cookie?: {
+                pb_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetPresetRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_widget_preset_api_boards__board_id__widgets_presets__key__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                board_id: number;
+                key: string;
+            };
+            cookie?: {
+                pb_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
