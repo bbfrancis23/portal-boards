@@ -2,7 +2,7 @@ import {ActionIcon, Group, Table} from "@mantine/core"
 import {useForm} from "@mantine/form"
 
 import ColumnInput from "./ColumnInput"
-import {emptyValue, isFilledIn} from "./column-values"
+import {emptyValue, isFilledIn, requiredColumnRules} from "./column-values"
 import type {Column, Row} from "./table-types"
 import {useEditWidgetRow} from "@/hooks/widgets/useEditWidgetRow"
 import {IconX, IconCheck} from "@tabler/icons-react"
@@ -16,11 +16,13 @@ const EditRow = ({columns, row, onDone}: EditRowProps) => {
     initialValues: Object.fromEntries(
       columns.map((col) => [col.key, row.data[col.key] ?? emptyValue(col)]),
     ),
+    validate: requiredColumnRules(columns),
   })
 
   const hasAnyValue = Object.values(form.values).some(isFilledIn)
 
   const save = (values: typeof form.values) => {
+    if (form.validate().hasErrors) return
     const filledIn = Object.fromEntries(Object.entries(values).filter(([, v]) => isFilledIn(v)))
     editRow.mutate({row, data: filledIn}, {onSuccess: onDone})
   }

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
+from fastapi.exceptions import RequestValidationError
 from sqlalchemy import select
 
 from app.db import SessionDep
@@ -46,6 +47,31 @@ def list_widget_data_by_widget_id(
     return rows_in_id_order(session, widget)
 
 
+def is_blank(value: object) -> bool:
+    return value is None or value == ""
+
+
+def require_columns(widget: WidgetInstance, data: dict[str, object]) -> None:
+    """A 422 like FastAPI's own, one error per required column left empty."""
+    missing = [
+        column
+        for column in widget.config.get("columns", [])
+        if column.get("required") and is_blank(data.get(column["key"]))
+    ]
+    if missing:
+        raise RequestValidationError(
+            [
+                {
+                    "type": "missing",
+                    "loc": ("body", "data", column["key"]),
+                    "msg": f"{column['label']} is required",
+                    "input": data.get(column["key"]),
+                }
+                for column in missing
+            ]
+        )
+
+
 @router_board.post("", status_code=status.HTTP_201_CREATED)
 def create_widget_data(
     widget: OwnedWidgetDep, session: SessionDep, body: WidgetDataCreate
@@ -54,6 +80,8 @@ def create_widget_data(
         raise HTTPException(
             status.HTTP_422_UNPROCESSABLE_CONTENT, f"A {widget.type} widget doesn't store rows"
         )
+
+    require_columns(widget, body.data)
     widget_data = WidgetData(widget_instance_id=widget.id, data=body.data)
     session.add(widget_data)
     session.commit()
@@ -66,6 +94,7 @@ def update_widget_data(
     row_id: int, widget: OwnedWidgetByIdDep, session: SessionDep, body: WidgetDataCreate
 ) -> WidgetDataRead:
     widget_data = get_widget_row(session, widget, row_id)
+    require_columns(widget, body.data)
     widget_data.data = body.data
     session.commit()
     session.refresh(widget_data)
