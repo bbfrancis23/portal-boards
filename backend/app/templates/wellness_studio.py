@@ -127,13 +127,20 @@ MEMBERS = WidgetSpec(
     config={
         "title": "Members",
         "columns": [
-            {"key": "name", "label": "Name", "type": "text"},
-            {"key": "membership", "label": "Membership", "type": "select", "options": MEMBERSHIPS},
+            {"key": "name", "label": "Name", "type": "text", "required": True},
+            {
+                "key": "membership",
+                "label": "Membership",
+                "type": "select",
+                "options": MEMBERSHIPS,
+                "required": True,
+            },
             {
                 "key": "status",
                 "label": "Status",
                 "type": "select",
                 "options": ["active", "inactive"],
+                "required": True,
             },
             {"key": "joined", "label": "Joined", "type": "date"},
             {"key": "visits", "label": "Visits", "type": "number"},
@@ -168,7 +175,7 @@ SALES = WidgetSpec(
     config={
         "title": "Sales",
         "columns": [
-            {"key": "date", "label": "Date", "type": "date"},
+            {"key": "date", "label": "Date", "type": "date", "required": True},
             {"key": "member", "label": "Member", "type": "text"},
             {"key": "item", "label": "Item", "type": "text"},
             {
@@ -176,8 +183,9 @@ SALES = WidgetSpec(
                 "label": "Revenue stream",
                 "type": "select",
                 "options": REVENUE_STREAMS,
+                "required": True,
             },
-            {"key": "amount", "label": "Amount", "type": "currency"},
+            {"key": "amount", "label": "Amount", "type": "currency", "required": True},
         ],
     },
 )

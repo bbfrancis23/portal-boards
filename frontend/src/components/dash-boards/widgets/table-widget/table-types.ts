@@ -5,6 +5,7 @@ export type Column = {
   label: string
   type: "text" | "select" | "date" | "currency" | "number"
   options?: string[]
+  required?: boolean
 }
 
 export type Row = WidgetData

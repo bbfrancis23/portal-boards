@@ -18,6 +18,7 @@ class Column(StrictConfig):
     label: str
     type: Literal["text", "number", "currency", "date", "select"]
     options: list[str] | None = None
+    required: bool | None = None
 
 
 class Source(StrictConfig):

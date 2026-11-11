@@ -2,7 +2,7 @@ import {Button, Group, Table} from "@mantine/core"
 import {useForm} from "@mantine/form"
 
 import ColumnInput from "./ColumnInput"
-import {emptyValue, isFilledIn} from "./column-values"
+import {emptyValue, isFilledIn, requiredColumnRules} from "./column-values"
 import type {Column} from "./table-types"
 import type {WidgetInstance} from "../widget-types"
 import {useCreateWidgetRow} from "@/hooks/widgets/useCreateWidgetRow"
@@ -14,11 +14,13 @@ const AddRow = ({widget, columns}: AddRowProps) => {
 
   const form = useForm({
     initialValues: Object.fromEntries(columns.map((col) => [col.key, emptyValue(col)])),
+    validate: requiredColumnRules(columns),
   })
 
   const hasAnyValue = Object.values(form.values).some(isFilledIn)
 
   const save = (values: typeof form.values) => {
+    if (form.validate().hasErrors) return
     const filledIn = Object.fromEntries(Object.entries(values).filter(([, v]) => isFilledIn(v)))
 
     addRow.mutate(

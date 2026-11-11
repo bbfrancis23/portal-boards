@@ -15,6 +15,10 @@ def widget_with_rows(session: Session, owner: User) -> WidgetInstance:
     return widget
 
 
+# The sample portal's first rows are Members, which requires Name, Membership and Status.
+ANN = {"name": "Ann", "membership": "Drop-in", "status": "active"}
+
+
 def widget_rows(session: Session, widget_id: int) -> list[WidgetData]:
     return list(
         session.scalars(select(WidgetData).where(WidgetData.widget_instance_id == widget_id))
@@ -63,9 +67,7 @@ def test_create_widget_data_appends_a_row(
     widget = widget_with_rows(session, dev_user)
     board_id, widget_id = widget.board_id, widget.id
 
-    response = client.post(
-        f"/api/boards/{board_id}/widgets/{widget_id}/data", json={"data": {"quote": "Run, runner"}}
-    )
+    response = client.post(f"/api/boards/{board_id}/widgets/{widget_id}/data", json={"data": ANN})
     assert response.status_code == 201
 
     created = response.json()
@@ -75,7 +77,7 @@ def test_create_widget_data_appends_a_row(
 
     rows = response.json()
     assert rows[-1]["id"] == created["id"]
-    assert rows[-1]["data"] == {"quote": "Run, runner"}
+    assert rows[-1]["data"] == ANN
 
 
 def test_create_widget_data_without_data_is_422(
@@ -160,14 +162,16 @@ def test_update_widget_data_replaces_the_row(
     widget = widget_with_rows(session, dev_user)
     row_id = widget_rows(session, widget.id)[0].id
 
+    ann_with_visits = {**ANN, "visits": 7}
+
     response = client.patch(
-        f"/api/widgets/{widget.id}/data/{row_id}", json={"data": {"name": "Ann", "visits": 7}}
+        f"/api/widgets/{widget.id}/data/{row_id}", json={"data": ann_with_visits}
     )
 
     assert response.status_code == 200
-    assert response.json()["data"] == {"name": "Ann", "visits": 7}
+    assert response.json()["data"] == ann_with_visits
     rows = client.get(f"/api/widgets/{widget.id}/data").json()
-    assert next(r for r in rows if r["id"] == row_id)["data"] == {"name": "Ann", "visits": 7}
+    assert next(r for r in rows if r["id"] == row_id)["data"] == ann_with_visits
 
 
 def test_update_widget_data_with_an_empty_row_is_422(
@@ -182,6 +186,77 @@ def test_update_widget_data_with_an_empty_row_is_422(
     assert response.status_code == 422
     session.refresh(row)
     assert row.data == data_before
+
+
+def test_create_widget_data_without_a_required_column_is_422(
+    client: TestClient, session: Session, dev_user: User
+) -> None:
+    widget = widget_with_rows(session, dev_user)
+    rows_before = len(widget_rows(session, widget.id))
+    without_status = {key: value for key, value in ANN.items() if key != "status"}
+
+    response = client.post(
+        f"/api/boards/{widget.board_id}/widgets/{widget.id}/data", json={"data": without_status}
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == [
+        {
+            "type": "missing",
+            "loc": ["body", "data", "status"],
+            "msg": "Status is required",
+            "input": None,
+        }
+    ]
+    assert len(widget_rows(session, widget.id)) == rows_before
+
+
+def test_a_blank_required_column_counts_as_missing(
+    client: TestClient, session: Session, dev_user: User
+) -> None:
+    widget = widget_with_rows(session, dev_user)
+
+    response = client.post(
+        f"/api/boards/{widget.board_id}/widgets/{widget.id}/data",
+        json={"data": {**ANN, "name": "", "membership": None}},
+    )
+
+    assert response.status_code == 422
+    missing = [problem["loc"][-1] for problem in response.json()["detail"]]
+    assert missing == ["name", "membership"]
+
+
+def test_update_widget_data_without_a_required_column_is_422_and_not_saved(
+    client: TestClient, session: Session, dev_user: User
+) -> None:
+    widget = widget_with_rows(session, dev_user)
+    row = widget_rows(session, widget.id)[0]
+    data_before = row.data
+
+    response = client.patch(
+        f"/api/widgets/{widget.id}/data/{row.id}", json={"data": {**ANN, "status": ""}}
+    )
+
+    assert response.status_code == 422
+    session.refresh(row)
+    assert row.data == data_before
+
+
+def test_schedules_have_no_required_columns(client: TestClient) -> None:
+    portal_id = client.post(
+        "/api/portals", json={"name": "Atrium", "template_id": "wellness-studio"}
+    ).json()["id"]
+    boards = client.get(f"/api/portals/{portal_id}/boards").json()
+    schedule_board = next(board for board in boards if board["label"] == "Schedule")
+    widgets = client.get(f"/api/boards/{schedule_board['id']}/widgets").json()
+    schedule = next(widget for widget in widgets if widget["type"] == "schedule")
+
+    response = client.post(
+        f"/api/boards/{schedule['board_id']}/widgets/{schedule['id']}/data",
+        json={"data": {"title": "Yoga", "start": "2026-11-09T06:30", "end": "2026-11-09T07:30"}},
+    )
+
+    assert response.status_code == 201
 
 
 def test_update_a_row_through_another_widget_is_404(

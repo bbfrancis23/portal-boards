@@ -121,6 +121,16 @@ def test_every_template_widget_config_matches_its_schema(template: Template) -> 
             pytest.fail(f"{spec.key}: {error}")
 
 
+@pytest.mark.parametrize("template", TEMPLATES.values(), ids=lambda template: template.id)
+def test_sample_rows_fill_every_required_column(template: Template) -> None:
+    sample = template.sample_data(TODAY)
+    for spec in (spec for board in template.boards for spec in board.widgets):
+        required = [col["key"] for col in spec.config.get("columns", []) if col.get("required")]
+        for row in sample.get(spec.key, []):
+            missing = [key for key in required if row.get(key) in (None, "")]
+            assert not missing, f"{spec.key}: a sample row has no {missing}"
+
+
 def test_template_widgets_keep_their_template_key(session: Session, user: User) -> None:
     portal = create_portal(session, user.id, "Atrium", "wellness-studio", today=TODAY)
 
