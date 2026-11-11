@@ -149,7 +149,12 @@ SCHEDULE = WidgetSpec(
     y=0,
     w=12,
     h=12,
-    config={"title": "Schedule", "dayStartHour": 6, "dayEndHour": 21},
+    config={
+        "title": "Schedule",
+        "dayStartHour": 6,
+        "dayEndHour": 21,
+        "classTypes": CLASS_TYPES,
+    },
 )
 
 SALES = WidgetSpec(

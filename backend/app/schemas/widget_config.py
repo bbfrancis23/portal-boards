@@ -49,7 +49,7 @@ class StatConfig(WidgetConfig):
 
 class ChartConfig(WidgetConfig):
     source: Source
-    chartType: Literal["pie", "bar", "line"]
+    chartType: Literal["pie", "bar", "line", "area"]
     stacked: bool | None = None
 
 
@@ -60,6 +60,8 @@ class TableConfig(WidgetConfig):
 class ScheduleConfig(WidgetConfig):
     dayStartHour: int = Field(ge=0, le=24)
     dayEndHour: int = Field(ge=0, le=24)
+    # The entry form's fixed choices, so classes group the same way in charts.
+    classTypes: list[str] = Field(min_length=1)
 
     @model_validator(mode="after")
     def day_starts_before_it_ends(self) -> Self:

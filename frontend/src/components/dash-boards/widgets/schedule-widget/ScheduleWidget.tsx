@@ -93,6 +93,7 @@ const ScheduleWidget = ({instance}: WidgetComponentProps) => {
           onClose={modal.close}
           widget={instance}
           target={target}
+          classTypes={config.classTypes ?? []}
         />
       )}
     </>

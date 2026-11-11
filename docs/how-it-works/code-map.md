@@ -609,7 +609,7 @@ flowchart TD
     Shell --> Table["table-widget/TableWidget.tsx<br/>AddRow · SavedRows · EditRow"]
     Shell --> Stat["widgets/StatWidget.tsx"]
     Shell --> Chart["widgets/ChartWidget.tsx<br/>@mantine/charts"]
-    Stat --> Agg["widgets/aggregate.ts<br/>aggregateRows · aggregateByPeriod · aggregateByGroup · aggregateByMonth"]
+    Stat --> Agg["widgets/aggregate.ts<br/>aggregateRows · aggregateByPeriod · aggregateByGroup · aggregateByMonth · aggregateByWeek"]
     Chart --> Agg
     Stat -- "useWidgetRows(source.widget)" --> Rows[("['widgets', id, 'data']")]
     Chart -- "useWidgetRows(source.widget)" --> Rows

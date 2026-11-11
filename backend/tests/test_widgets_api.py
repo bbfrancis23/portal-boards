@@ -159,7 +159,7 @@ def test_create_stat_summing_without_a_field_is_422(client: TestClient) -> None:
 )
 def test_create_schedule_with_bad_hours_is_422(client: TestClient, start: int, end: int) -> None:
     board_id = overview_stat(client)["board_id"]
-    config = {"title": "Classes", "dayStartHour": start, "dayEndHour": end}
+    config = {"title": "Classes", "dayStartHour": start, "dayEndHour": end, "classTypes": ["Yoga"]}
 
     response = client.post(
         f"/api/boards/{board_id}/widgets",
@@ -167,6 +167,19 @@ def test_create_schedule_with_bad_hours_is_422(client: TestClient, start: int, e
     )
 
     assert response.status_code == 422
+
+
+def test_create_schedule_without_class_types_is_422(client: TestClient) -> None:
+    board_id = overview_stat(client)["board_id"]
+    config = {"title": "Classes", "dayStartHour": 6, "dayEndHour": 21, "classTypes": []}
+
+    response = client.post(
+        f"/api/boards/{board_id}/widgets",
+        json={"type": "schedule", "w": 12, "h": 8, "config": config},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["loc"] == ["body", "config", "classTypes"]
 
 
 def test_create_widget_without_a_title_is_422(client: TestClient) -> None:
@@ -585,4 +598,5 @@ def test_a_deleted_schedule_can_be_added_again(client: TestClient, session: Sess
         "title": "Schedule",
         "dayStartHour": 6,
         "dayEndHour": 21,
+        "classTypes": ["Yoga", "Pilates", "Upper body toning", "Lower body toning"],
     }
