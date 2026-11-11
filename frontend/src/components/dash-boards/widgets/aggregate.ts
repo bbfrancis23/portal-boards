@@ -1,8 +1,8 @@
 import type {WidgetData} from "@/hooks/widgets/useWidgetRows"
 
-export type Period = "this_week" | "this_month" | "last_6_months"
+export type Period = "this_week" | "this_month" | "last_6_months" | "last_8_weeks"
 
-// A stat or chart's query over an input widget's rows.
+// A stat or chart's query over a data widget's rows.
 export type Source = {
   widget: number
   aggregate: "count" | "sum" | "avg"
@@ -11,7 +11,7 @@ export type Source = {
   where?: Record<string, unknown>
   dateField?: string
   period?: Period
-  bucket?: "month"
+  bucket?: "month" | "week"
   seriesBy?: string
 }
 
@@ -22,6 +22,8 @@ const isoDay = (date: Date) =>
     String(date.getDate()).padStart(2, "0"),
   ].join("-")
 
+const WEEKS_SHOWN = 8
+
 const wholePeriod = (period: Period, today: Date, periodsBack: number) => {
   if (period === "this_month") {
     const start = new Date(today.getFullYear(), today.getMonth() - periodsBack, 1)
@@ -31,13 +33,14 @@ const wholePeriod = (period: Period, today: Date, periodsBack: number) => {
     const start = new Date(today.getFullYear(), today.getMonth() - 5 - 6 * periodsBack, 1)
     return {start, end: new Date(start.getFullYear(), start.getMonth() + 6, 1)}
   }
+  const weeks = period === "last_8_weeks" ? WEEKS_SHOWN : 1
   const daysSinceMonday = (today.getDay() + 6) % 7
   const start = new Date(
     today.getFullYear(),
     today.getMonth(),
-    today.getDate() - daysSinceMonday - 7 * periodsBack,
+    today.getDate() - daysSinceMonday - 7 * (weeks - 1) - 7 * weeks * periodsBack,
   )
-  return {start, end: new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7)}
+  return {start, end: new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7 * weeks)}
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -177,3 +180,17 @@ export const aggregateByMonth = (
 
   return {data, series}
 }
+
+// One point per week (Monday to Sunday), oldest first, labeled by its Monday. Weeks without
+// rows are 0, so the line doesn't skip them. Always the last 8 weeks, whatever source.period
+// says: last_8_weeks is the only period week buckets use today.
+export const aggregateByWeek = (rows: WidgetData[], source: Source, today = new Date()) =>
+  Array.from({length: WEEKS_SHOWN}, (_, i) => {
+    const weeksBack = WEEKS_SHOWN - 1 - i
+    const {start} = wholePeriod("this_week", today, weeksBack)
+    const oneWeek: Source = {...source, period: "this_week"}
+    return {
+      week: start.toLocaleString("en-US", {month: "short", day: "numeric"}),
+      value: aggregateRows(rows, oneWeek, {today, periodsBack: weeksBack}),
+    }
+  })

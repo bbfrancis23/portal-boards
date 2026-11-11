@@ -6,6 +6,7 @@ import {
   Modal,
   NumberInput,
   SegmentedControl,
+  Select,
   Stack,
   Text,
   TextInput,
@@ -35,11 +36,13 @@ type ScheduleEntryModalProps = {
   onClose: () => void
   widget: WidgetInstance
   target: EntryTarget
+  classTypes: string[]
 }
 
 type EntryValues = {
   title: string
   kind: EntryKind
+  classType: string
   start: string
   end: string
   staff: string
@@ -54,12 +57,21 @@ const KIND_OPTIONS = [
 
 const initialValues = (target: EntryTarget): EntryValues => {
   if (!("row" in target)) {
-    return {...target, title: "", kind: "class", staff: "", capacity: "", booked: ""}
+    return {
+      ...target,
+      title: "",
+      kind: "class",
+      classType: "",
+      staff: "",
+      capacity: "",
+      booked: "",
+    }
   }
   const entry = target.row.data as ScheduleEntry
   return {
     title: entry.title,
     kind: entry.kind ?? "class",
+    classType: entry.classType ?? "",
     start: toPickerTime(entry.start),
     end: toPickerTime(entry.end),
     staff: entry.staff ?? "",
@@ -75,6 +87,7 @@ const toRowData = (values: EntryValues, existing: Record<string, unknown> = {}) 
     ...existing,
     title: values.title.trim(),
     kind: values.kind,
+    classType: isClass ? values.classType : "",
     start: toStoredTime(values.start),
     end: toStoredTime(values.end),
     staff: values.staff.trim(),
@@ -88,7 +101,13 @@ const toRowData = (values: EntryValues, existing: Record<string, unknown> = {}) 
 const deleteQuestion = (row: WidgetData) =>
   `Delete ${String(row.data.title)} on ${dayjs(String(row.data.start)).format("ddd, MMM D [at] h:mm A")}? This can't be undone.`
 
-const ScheduleEntryModal = ({opened, onClose, widget, target}: ScheduleEntryModalProps) => {
+const ScheduleEntryModal = ({
+  opened,
+  onClose,
+  widget,
+  target,
+  classTypes,
+}: ScheduleEntryModalProps) => {
   const existingRow = "row" in target ? target.row : undefined
   const createRow = useCreateWidgetRow()
   const editRow = useEditWidgetRow()
@@ -99,6 +118,8 @@ const ScheduleEntryModal = ({opened, onClose, widget, target}: ScheduleEntryModa
     initialValues: initialValues(target),
     validate: {
       title: isNotEmpty("Enter a title"),
+      classType: (classType, values) =>
+        values.kind === "class" && !classType ? "Pick a class type" : null,
       start: isNotEmpty("Pick a start"),
       end: (end, values) => {
         if (!end) return "Pick an end"
@@ -127,6 +148,15 @@ const ScheduleEntryModal = ({opened, onClose, widget, target}: ScheduleEntryModa
         <Stack>
           <SegmentedControl data={KIND_OPTIONS} {...form.getInputProps("kind")} />
           <TextInput label="Title" data-autofocus {...form.getInputProps("title")} />
+          {form.values.kind === "class" && (
+            <Select
+              label="Class type"
+              description="Charts group classes by this"
+              data={classTypes}
+              allowDeselect={false}
+              {...form.getInputProps("classType")}
+            />
+          )}
           <Group grow>
             <DateTimePicker label="Start" {...form.getInputProps("start")} />
             <DateTimePicker label="End" {...form.getInputProps("end")} />

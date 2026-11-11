@@ -40,6 +40,7 @@ const comparisonLabel = {
   this_week: "vs same point last week",
   this_month: "vs same point last month",
   last_6_months: "vs same point in the 6 months before",
+  last_8_weeks: "vs same point in the 8 weeks before",
 }
 
 const StatWidget = ({instance}: WidgetComponentProps) => {

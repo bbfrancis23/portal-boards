@@ -6,6 +6,7 @@ import {
   aggregateByGroup,
   aggregateByMonth,
   aggregateByPeriod,
+  aggregateByWeek,
   type Source,
 } from "./aggregate"
 import type {WidgetData} from "@/hooks/widgets/useWidgetRows"
@@ -195,4 +196,65 @@ test("groups leave out rows without the field they group by", () => {
 test("no rows gives 0", () => {
   expect(aggregateRows([], spaRevenueThisMonth, {})).toBe(0)
   expect(aggregateRows([], {widget: 1, aggregate: "avg", field: "amount"})).toBe(0)
+})
+
+test("last 8 weeks runs from seven Mondays back through the end of this week", () => {
+  expect(periodRange("last_8_weeks", today)).toEqual({start: "2026-09-14", end: "2026-11-09"})
+})
+
+const weeklyAttendance: Source = {
+  widget: 1,
+  aggregate: "sum",
+  field: "booked",
+  where: {kind: "class"},
+  dateField: "start",
+  bucket: "week",
+  period: "last_8_weeks",
+}
+
+test("weeks give each of the last 8 weeks a total, oldest first, with 0 for empty weeks", () => {
+  const classes = [
+    row(1, {kind: "class", start: "2026-09-14T07:00", booked: 10}),
+    row(2, {kind: "class", start: "2026-09-20T18:30", booked: 5}),
+    row(3, {kind: "appointment", start: "2026-11-03T10:00", booked: 99}),
+    row(4, {kind: "class", start: "2026-11-08T09:00", booked: 12}),
+    row(5, {kind: "class", start: "2026-09-13T09:00", booked: 99}),
+  ]
+
+  const weeks = aggregateByWeek(classes, weeklyAttendance, today)
+
+  expect(weeks.map((week) => week.week)).toEqual([
+    "Sep 14",
+    "Sep 21",
+    "Sep 28",
+    "Oct 5",
+    "Oct 12",
+    "Oct 19",
+    "Oct 26",
+    "Nov 2",
+  ])
+  expect(weeks.map((week) => week.value)).toEqual([15, 0, 0, 0, 0, 0, 0, 12])
+})
+
+test("bars by group average each class type", () => {
+  const classes = [
+    row(1, {kind: "class", classType: "Yoga", booked: 10}),
+    row(2, {kind: "class", classType: "Yoga", booked: 14}),
+    row(3, {kind: "class", classType: "Pilates", booked: 8}),
+    row(4, {kind: "appointment", service: "Massage"}),
+  ]
+  const source: Source = {
+    widget: 1,
+    aggregate: "avg",
+    field: "booked",
+    where: {kind: "class"},
+    groupBy: "classType",
+  }
+
+  expect(
+    aggregateByGroup(classes, source, ["cyan.6"]).map(({name, value}) => [name, value]),
+  ).toEqual([
+    ["Yoga", 12],
+    ["Pilates", 8],
+  ])
 })

@@ -11,12 +11,13 @@ export type ScheduleEntry = {
   start: string
   end: string
   kind: EntryKind
+  classType?: string
   staff?: string
   capacity?: number
   booked?: number
 }
 
-export type ScheduleConfig = {dayStartHour?: number; dayEndHour?: number}
+export type ScheduleConfig = {dayStartHour?: number; dayEndHour?: number; classTypes?: string[]}
 
 export const KIND_COLORS: Record<EntryKind, string> = {class: "cyan", appointment: "violet"}
 
