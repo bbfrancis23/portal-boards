@@ -74,7 +74,7 @@ sequenceDiagram
 ```
 
 ## 3. Data model
-SQLAlchemy 2.0 typed models. Every foreign key below the user is `ON DELETE CASCADE`, so deleting a portal removes its boards, widgets and rows. `Conversation` and `Message` exist for the AI assistant but aren't used yet.
+SQLAlchemy 2.0 typed models. Every foreign key below the user is `ON DELETE CASCADE`, so deleting a portal removes its boards, widgets and rows. A stat or chart's link to its table or schedule is not a foreign key: it's `source.widget` inside its JSON config. So deleting a table or schedule removes its readers in code (`get_widget_dependents`, in the same commit), and `GET /api/widgets/{id}/dependents` lists them for the delete confirmation. `Conversation` and `Message` exist for the AI assistant but aren't used yet.
 
 ```mermaid
 erDiagram

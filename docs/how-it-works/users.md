@@ -39,6 +39,7 @@ flowchart TD
     Board --> Menu["⋯ Widget menu"]
     Menu --> Rename["Rename"]
     Menu --> Delete["Delete (asks first)"]
+    Delete --> DelData["Deleting a table or schedule also deletes<br/>the stats and charts that read it (listed first)"]
 
     Board --> Rows["📝 Table rows"]
     Rows --> AddRow["Add a row"]

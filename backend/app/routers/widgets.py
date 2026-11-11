@@ -120,9 +120,38 @@ def update_widget(
     return WidgetRead.model_validate(widget)
 
 
+def get_widget_dependents(session: Session, data_widget: WidgetInstance) -> list[WidgetInstance]:
+    board = session.get_one(Board, data_widget.board_id)
+    statement = (
+        select(WidgetInstance)
+        .join(Board)
+        .where(
+            Board.portal_id == board.portal_id,
+            WidgetInstance.config["source"]["widget"].as_integer() == data_widget.id,
+        )
+    )
+
+    return list(session.scalars(statement))
+
+
+@router_widget.get("/dependents")
+def list_widget_dependents(
+    widget_id: int, session: SessionDep, user: CurrentUserDep
+) -> list[WidgetRead]:
+    widget = get_owned_widget_by_id(session, user, widget_id)
+    return [
+        WidgetRead.model_validate(dependent) for dependent in get_widget_dependents(session, widget)
+    ]
+
+
 @router_widget.delete("", status_code=status.HTTP_204_NO_CONTENT)
 def delete_widget(widget_id: int, session: SessionDep, user: CurrentUserDep) -> None:
     widget = get_owned_widget_by_id(session, user, widget_id)
+
+    if widget.type in DATA_WIDGET_TYPES:
+        for dependent in get_widget_dependents(session, widget):
+            session.delete(dependent)
+
     session.delete(widget)
     session.commit()
 

@@ -18,7 +18,7 @@ export const useDeleteWidget = () => {
       queryClient.setQueryData<WidgetInstance[]>(key, (widgets) =>
         widgets?.filter((w) => w.id !== widget.id),
       )
-      queryClient.invalidateQueries({queryKey: key})
+      queryClient.invalidateQueries({queryKey: ["boards"]})
     },
   })
 }
