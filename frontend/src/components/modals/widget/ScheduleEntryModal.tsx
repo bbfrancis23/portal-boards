@@ -12,6 +12,7 @@ import {
 } from "@mantine/core"
 import {DateTimePicker} from "@mantine/dates"
 import {isNotEmpty, useForm} from "@mantine/form"
+import dayjs from "dayjs"
 import {useState} from "react"
 
 import {
@@ -83,6 +84,10 @@ const toRowData = (values: EntryValues, existing: Record<string, unknown> = {}) 
   return Object.fromEntries(Object.entries(data).filter(([, value]) => value !== ""))
 }
 
+// Names what's saved, not the form: unsaved edits aren't what gets deleted.
+const deleteQuestion = (row: WidgetData) =>
+  `Delete ${String(row.data.title)} on ${dayjs(String(row.data.start)).format("ddd, MMM D [at] h:mm A")}? This can't be undone.`
+
 const ScheduleEntryModal = ({opened, onClose, widget, target}: ScheduleEntryModalProps) => {
   const existingRow = "row" in target ? target.row : undefined
   const createRow = useCreateWidgetRow()
@@ -147,10 +152,7 @@ const ScheduleEntryModal = ({opened, onClose, widget, target}: ScheduleEntryModa
                   {deleteRow.isError && (
                     <Alert color="danger">Couldn't delete the entry. Please try again.</Alert>
                   )}
-                  <Text size="sm">
-                    Stats and charts that read this schedule will update without it. This can't be
-                    undone.
-                  </Text>
+                  <Text size="sm">{deleteQuestion(existingRow)}</Text>
                   <Group justify="flex-end">
                     <Button variant="subtle" onClick={() => setConfirmingDelete(false)}>
                       Cancel

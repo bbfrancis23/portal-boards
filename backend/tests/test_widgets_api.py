@@ -312,6 +312,87 @@ def test_delete_removes_the_widget_and_its_data(
     assert session.scalars(statement).first() is None
 
 
+def portal_keys(session: Session) -> set[str | None]:
+    return set(session.scalars(select(WidgetInstance.template_key)))
+
+
+SALES_READERS = {"revenue_this_month", "revenue_by_month", "spa_revenue_this_month"}
+SCHEDULE_READERS = {
+    "classes_this_week",
+    "spa_bookings_this_week",
+    "attendance_trend",
+    "attendance_by_class",
+}
+
+
+def test_deleting_a_table_deletes_the_stats_and_charts_that_read_it(
+    client: TestClient, session: Session
+) -> None:
+    overview_board_id(client)
+    before = portal_keys(session)
+
+    client.delete(f"/api/widgets/{widget_with_key(session, 'sales').id}")
+
+    assert portal_keys(session) == before - {"sales"} - SALES_READERS
+
+
+def test_deleting_a_schedule_deletes_the_stats_and_charts_that_read_it(
+    client: TestClient, session: Session
+) -> None:
+    overview_board_id(client)
+    before = portal_keys(session)
+
+    client.delete(f"/api/widgets/{widget_with_key(session, 'schedule').id}")
+
+    assert portal_keys(session) == before - {"schedule"} - SCHEDULE_READERS
+
+
+def test_deleting_a_stat_deletes_only_itself(client: TestClient, session: Session) -> None:
+    overview_board_id(client)
+    before = portal_keys(session)
+
+    client.delete(f"/api/widgets/{widget_with_key(session, 'classes_this_week').id}")
+
+    assert portal_keys(session) == before - {"classes_this_week"}
+
+
+def test_deleting_a_table_leaves_other_portals_alone(client: TestClient, session: Session) -> None:
+    overview_board_id(client)
+    overview_board_id(client)
+    first_sales = session.scalars(
+        select(WidgetInstance).where(WidgetInstance.template_key == "sales")
+    ).first()
+    assert first_sales is not None
+
+    client.delete(f"/api/widgets/{first_sales.id}")
+
+    keys = list(session.scalars(select(WidgetInstance.template_key)))
+    assert all(keys.count(key) == 1 for key in SALES_READERS | {"sales"})
+
+
+def test_dependents_list_the_stats_and_charts_that_read_a_schedule(
+    client: TestClient, session: Session
+) -> None:
+    overview_board_id(client)
+
+    response = client.get(f"/api/widgets/{widget_with_key(session, 'schedule').id}/dependents")
+
+    assert response.status_code == 200
+    ids = {dependent["id"] for dependent in response.json()}
+    assert ids == {widget_with_key(session, key).id for key in SCHEDULE_READERS}
+
+
+def test_a_stat_has_no_dependents(client: TestClient, session: Session) -> None:
+    overview_board_id(client)
+
+    response = client.get(
+        f"/api/widgets/{widget_with_key(session, 'active_members').id}/dependents"
+    )
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
 def test_missing_board_or_widget_is_404(client: TestClient) -> None:
     body = {"type": "stat", "w": 3, "h": 2}
     assert client.get("/api/boards/999/widgets").status_code == 404
@@ -319,6 +400,7 @@ def test_missing_board_or_widget_is_404(client: TestClient) -> None:
     assert client.patch("/api/boards/999/widgets/layout", json=[]).status_code == 404
     assert client.patch("/api/widgets/999", json={"w": 4}).status_code == 404
     assert client.delete("/api/widgets/999").status_code == 404
+    assert client.get("/api/widgets/999/dependents").status_code == 404
 
 
 def test_other_users_widgets_are_protected(
@@ -341,6 +423,7 @@ def test_other_users_widgets_are_protected(
     assert client.patch(url, json=layout).status_code == 404
     assert client.patch(f"/api/widgets/{their_widget.id}", json={"w": 9}).status_code == 404
     assert client.delete(f"/api/widgets/{their_widget.id}").status_code == 404
+    assert client.get(f"/api/widgets/{their_widget.id}/dependents").status_code == 404
     session.refresh(their_widget)
     assert (their_widget.x, their_widget.y, their_widget.w, their_widget.h) == before
 
