@@ -1,6 +1,8 @@
 import EditPortalModal from "@/components/modals/portal/EditPortalModal"
 import NewPortalModal from "@/components/modals/portal/NewPortalModal"
 import {usePortals} from "@/hooks/portal/usePortals"
+import {useCurrentUser} from "@/hooks/useCurrentUser"
+import {useSetDefaultPortal} from "@/hooks/users/useSetDefaultPortal"
 import {useTemplates} from "@/hooks/useTemplates"
 import {
   ActionIcon,
@@ -13,12 +15,14 @@ import {
   Stack,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core"
 import {useDisclosure} from "@mantine/hooks"
 import {
   IconPhotoCircle as PortalIcon,
   IconPhotoCirclePlus as AddPortalIcon,
   IconEdit,
+  IconHome,
 } from "@tabler/icons-react"
 import {useState} from "react"
 import {Link} from "react-router"
@@ -32,9 +36,15 @@ const DESCRIPTION_HEIGHT = "3.1em" // two lines of text (line height 1.55)
 const Portals = () => {
   const {data: portals, isPending: isPendingPortals} = usePortals()
   const {data: templates, isPending: isPendingTemplates} = useTemplates()
+  const {data: user} = useCurrentUser()
+  const setDefaultPortal = useSetDefaultPortal()
   const [opened, modal] = useDisclosure(false)
   const [editOpened, editModal] = useDisclosure(false)
   const [portalId, setPortalId] = useState<number | null>(null)
+  // Same rule as log-in: the chosen home, or the first portal when none is chosen (or it was deleted).
+  const homePortal = user?.default_portal_id ?? portals?.[0]?.id
+  const homeLabel = (portalId: number) =>
+    portalId === homePortal ? "This is your home portal" : "Make this your home portal"
 
   const handleOpenEditPortalModal = (portalId: number) => {
     setPortalId(portalId)
@@ -93,8 +103,27 @@ const Portals = () => {
                   <AspectRatio ratio={IMAGE_RATIO}>
                     <Image src={`/images/templates/${portal.template_id ?? "custom"}.svg`} alt="" />
                   </AspectRatio>
-                  {/* Floats over the picture's top-right corner. It's inside the card's link, so
-                      preventDefault keeps a click here from also opening the portal. */}
+
+                  <Tooltip label={homeLabel(portal.id)}>
+                    <ActionIcon
+                      variant={portal.id === homePortal ? "light" : "subtle"}
+                      color={portal.id === homePortal ? "amber" : undefined}
+                      aria-label={homeLabel(portal.id)}
+                      pos="absolute"
+                      top={8}
+                      left={8}
+                      loading={
+                        setDefaultPortal.isPending &&
+                        setDefaultPortal.variables?.portalId === portal.id
+                      }
+                      onClick={(event) => {
+                        // The card is a link; this button shouldn't open the portal.
+                        event.preventDefault()
+                        if (portal.id !== homePortal) setDefaultPortal.mutate({portalId: portal.id})
+                      }}>
+                      <IconHome style={{width: "70%", height: "70%"}} />
+                    </ActionIcon>
+                  </Tooltip>
                   <ActionIcon
                     variant="filled"
                     aria-label="Portal options"

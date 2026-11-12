@@ -3,10 +3,13 @@ from typing import Any
 from authlib.integrations.starlette_client import OAuthError
 from fastapi import APIRouter, Request, Response, status
 from fastapi.responses import RedirectResponse
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.auth import CurrentUserDep, clear_session_cookie, set_session_cookie
 from app.config import get_settings
 from app.db import SessionDep
+from app.models import Portal, User
 from app.oauth import oauth
 from app.ownership import get_owned_portal
 from app.rate_limit import AUTH_LIMIT, limiter
@@ -15,6 +18,17 @@ from app.schemas.user import UserRead
 from app.services.users_service import find_or_create_oauth_user
 
 router = APIRouter(prefix="/api", tags=["auth", "user"])
+
+
+def landing_path(session: Session, user: User) -> str:
+    """Where log-in lands: the home portal; without one (never chosen, or deleted), the first
+    portal, as the Portals page lists them; with no portals, the Portals page."""
+    if user.default_portal_id is not None:
+        return f"/portals/{user.default_portal_id}"
+    first = session.scalar(
+        select(Portal.id).where(Portal.owner_id == user.id).order_by(Portal.created_at).limit(1)
+    )
+    return f"/portals/{first}" if first is not None else "/portals"
 
 
 @router.get("/users/me")
@@ -70,7 +84,7 @@ async def github_callback(request: Request, session: SessionDep) -> RedirectResp
         display_name=profile["name"] or profile["login"],
         avatar_url=profile.get("avatar_url"),
     )
-    response = RedirectResponse(f"{app_url}/portals")
+    response = RedirectResponse(f"{app_url}{landing_path(session, user)}")
     set_session_cookie(response, user.id)
     return response
 
@@ -106,6 +120,6 @@ async def google_callback(request: Request, session: SessionDep) -> RedirectResp
         display_name=userinfo.get("name") or userinfo["email"],
         avatar_url=userinfo.get("picture"),
     )
-    response = RedirectResponse(f"{app_url}/portals")
+    response = RedirectResponse(f"{app_url}{landing_path(session, user)}")
     set_session_cookie(response, user.id)
     return response
