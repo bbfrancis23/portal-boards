@@ -29,6 +29,14 @@ class WidgetDataCreate(BaseModel):
     data: dict[str, Any] = Field(min_length=1)
 
 
+# A table draws every row, so a few thousand already slows it down; big imports go in batches.
+MAX_ROWS_PER_REQUEST = 1000
+
+
+class WidgetDataBulkCreate(BaseModel):
+    rows: list[WidgetDataCreate] = Field(min_length=1, max_length=MAX_ROWS_PER_REQUEST)
+
+
 class WidgetRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

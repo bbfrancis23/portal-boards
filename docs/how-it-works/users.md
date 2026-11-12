@@ -43,9 +43,11 @@ flowchart TD
 
     Board --> Rows["📝 Table rows"]
     Rows --> AddRow["Add a row"]
+    Rows --> PasteCsv["Paste CSV from a spreadsheet<br/>(adds the rows that fit, says how many were skipped)"]
     Rows --> EditRow["Edit a row"]
     Rows --> DelRow["Delete a row (asks first)"]
     AddRow --> Live["Stats and charts using<br/>that table update right away"]
+    PasteCsv --> Live
     EditRow --> Live
     DelRow --> Live
 ```
