@@ -8,8 +8,11 @@ import glass from "@/theme/glass.module.css"
 const LogIn = () => {
   const {data: user} = useCurrentUser()
 
-  // Already logged in: nothing to do here, go straight to the app.
-  if (user) return <Navigate to="/portals" replace />
+  // Already logged in: nothing to do here, go straight to the home portal (or pick one).
+  if (user) {
+    const landing = user.default_portal_id ? `/portals/${user.default_portal_id}` : "/portals"
+    return <Navigate to={landing} replace />
+  }
 
   return (
     <Center pt={64}>

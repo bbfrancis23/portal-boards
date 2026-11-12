@@ -236,3 +236,59 @@ def test_the_11th_auth_request_in_a_minute_is_429(client: TestClient) -> None:
 def test_users_me_is_not_rate_limited(client: TestClient) -> None:
     for _ in range(15):
         assert client.get("/api/users/me").status_code == 200
+
+
+def log_in_with_github(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> str:
+    """Logs in as the GitHub user and returns where the callback sends the browser."""
+    fake_github(monkeypatch, github_user(), verified("new@example.com"))
+    response = client.get("/api/auth/github/callback", follow_redirects=False)
+    return response.headers["location"]
+
+
+def test_log_in_with_no_portals_lands_on_the_portals_page(
+    anonymous_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert log_in_with_github(anonymous_client, monkeypatch).endswith("/portals")
+
+
+def test_log_in_with_one_portal_opens_it(
+    anonymous_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    log_in_with_github(anonymous_client, monkeypatch)
+    portal_id = anonymous_client.post("/api/portals", json={"name": "Only"}).json()["id"]
+
+    assert log_in_with_github(anonymous_client, monkeypatch).endswith(f"/portals/{portal_id}")
+
+
+def test_log_in_opens_the_home_portal(
+    anonymous_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    log_in_with_github(anonymous_client, monkeypatch)
+    anonymous_client.post("/api/portals", json={"name": "First"})
+    home_id = anonymous_client.post("/api/portals", json={"name": "Home"}).json()["id"]
+    anonymous_client.put("/api/users/me/default-portal", json={"default_portal_id": home_id})
+
+    assert log_in_with_github(anonymous_client, monkeypatch).endswith(f"/portals/{home_id}")
+
+
+def test_log_in_with_several_portals_and_no_home_opens_the_first(
+    anonymous_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    log_in_with_github(anonymous_client, monkeypatch)
+    first_id = anonymous_client.post("/api/portals", json={"name": "First"}).json()["id"]
+    anonymous_client.post("/api/portals", json={"name": "Second"})
+
+    assert log_in_with_github(anonymous_client, monkeypatch).endswith(f"/portals/{first_id}")
+
+
+def test_deleting_the_home_portal_makes_the_first_portal_home_again(
+    anonymous_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    log_in_with_github(anonymous_client, monkeypatch)
+    first_id = anonymous_client.post("/api/portals", json={"name": "First"}).json()["id"]
+    anonymous_client.post("/api/portals", json={"name": "Second"})
+    home_id = anonymous_client.post("/api/portals", json={"name": "Home"}).json()["id"]
+    anonymous_client.put("/api/users/me/default-portal", json={"default_portal_id": home_id})
+    anonymous_client.delete(f"/api/portals/{home_id}")
+
+    assert log_in_with_github(anonymous_client, monkeypatch).endswith(f"/portals/{first_id}")
