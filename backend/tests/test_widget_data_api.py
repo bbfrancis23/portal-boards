@@ -368,3 +368,101 @@ def test_delete_an_imaginary_row_is_404(
 
     assert response.status_code == 404
     assert len(widget_rows(session, widget.id)) == rows_before
+
+
+BO = {"name": "Bo", "membership": "10-class pack", "status": "inactive"}
+
+
+def bulk_url(widget: WidgetInstance) -> str:
+    return f"/api/boards/{widget.board_id}/widgets/{widget.id}/data/bulk"
+
+
+def test_bulk_create_adds_every_row_in_order(
+    client: TestClient, session: Session, dev_user: User
+) -> None:
+    widget = widget_with_rows(session, dev_user)
+    rows_before = len(widget_rows(session, widget.id))
+
+    response = client.post(bulk_url(widget), json={"rows": [{"data": ANN}, {"data": BO}]})
+
+    assert response.status_code == 201
+    assert [row["data"] for row in response.json()] == [ANN, BO]
+    rows = client.get(f"/api/widgets/{widget.id}/data").json()
+    assert len(rows) == rows_before + 2
+    assert [row["data"] for row in rows[-2:]] == [ANN, BO]
+
+
+def test_bulk_create_with_a_missing_required_column_adds_no_rows(
+    client: TestClient, session: Session, dev_user: User
+) -> None:
+    widget = widget_with_rows(session, dev_user)
+    rows_before = len(widget_rows(session, widget.id))
+    bo_without_status = {key: value for key, value in BO.items() if key != "status"}
+
+    response = client.post(
+        bulk_url(widget), json={"rows": [{"data": ANN}, {"data": bo_without_status}]}
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["loc"] == ["body", "rows", 1, "data", "status"]
+    assert len(widget_rows(session, widget.id)) == rows_before
+
+
+def test_bulk_create_with_an_empty_row_adds_no_rows(
+    client: TestClient, session: Session, dev_user: User
+) -> None:
+    widget = widget_with_rows(session, dev_user)
+    rows_before = len(widget_rows(session, widget.id))
+
+    response = client.post(bulk_url(widget), json={"rows": [{"data": ANN}, {"data": {}}]})
+
+    assert response.status_code == 422
+    assert len(widget_rows(session, widget.id)) == rows_before
+
+
+def test_bulk_create_with_no_rows_is_422(
+    client: TestClient, session: Session, dev_user: User
+) -> None:
+    widget = widget_with_rows(session, dev_user)
+
+    assert client.post(bulk_url(widget), json={"rows": []}).status_code == 422
+
+
+def test_bulk_create_on_a_stat_widget_is_422(client: TestClient) -> None:
+    portal_id = client.post(
+        "/api/portals", json={"name": "Atrium", "template_id": "wellness-studio"}
+    ).json()["id"]
+    overview = client.get(f"/api/portals/{portal_id}/boards").json()[0]
+    widgets = client.get(f"/api/boards/{overview['id']}/widgets").json()
+    stat = next(widget for widget in widgets if widget["type"] == "stat")
+
+    response = client.post(
+        f"/api/boards/{stat['board_id']}/widgets/{stat['id']}/data/bulk",
+        json={"rows": [{"data": ANN}]},
+    )
+
+    assert response.status_code == 422
+
+
+def test_bulk_create_on_other_users_widget_is_404(
+    session: Session, other_user: User, client: TestClient
+) -> None:
+    widget = widget_with_rows(session, other_user)
+    rows_before = len(widget_rows(session, widget.id))
+
+    response = client.post(bulk_url(widget), json={"rows": [{"data": ANN}]})
+
+    assert response.status_code == 404
+    assert len(widget_rows(session, widget.id)) == rows_before
+
+
+def test_bulk_create_over_1000_rows_is_422(
+    client: TestClient, session: Session, dev_user: User
+) -> None:
+    widget = widget_with_rows(session, dev_user)
+    rows_before = len(widget_rows(session, widget.id))
+
+    response = client.post(bulk_url(widget), json={"rows": [{"data": ANN}] * 1001})
+
+    assert response.status_code == 422
+    assert len(widget_rows(session, widget.id)) == rows_before

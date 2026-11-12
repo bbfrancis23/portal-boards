@@ -5,7 +5,12 @@ from sqlalchemy import select
 from app.db import SessionDep
 from app.models import WidgetData, WidgetInstance
 from app.ownership import OwnedWidgetByIdDep, OwnedWidgetDep
-from app.schemas.widget import DATA_WIDGET_TYPES, WidgetDataCreate, WidgetDataRead
+from app.schemas.widget import (
+    DATA_WIDGET_TYPES,
+    WidgetDataBulkCreate,
+    WidgetDataCreate,
+    WidgetDataRead,
+)
 
 router_board = APIRouter(
     prefix="/api/boards/{board_id}/widgets/{widget_id}/data", tags=["widget data"]
@@ -51,8 +56,11 @@ def is_blank(value: object) -> bool:
     return value is None or value == ""
 
 
-def require_columns(widget: WidgetInstance, data: dict[str, object]) -> None:
-    """A 422 like FastAPI's own, one error per required column left empty."""
+def require_columns(
+    widget: WidgetInstance, data: dict[str, object], at: tuple[str | int, ...] = ("body", "data")
+) -> None:
+    """A 422 like FastAPI's own, one error per required column left empty. `at` is where the
+    row sits in the request body."""
     missing = [
         column
         for column in widget.config.get("columns", [])
@@ -63,7 +71,7 @@ def require_columns(widget: WidgetInstance, data: dict[str, object]) -> None:
             [
                 {
                     "type": "missing",
-                    "loc": ("body", "data", column["key"]),
+                    "loc": (*at, column["key"]),
                     "msg": f"{column['label']} is required",
                     "input": data.get(column["key"]),
                 }
@@ -72,21 +80,41 @@ def require_columns(widget: WidgetInstance, data: dict[str, object]) -> None:
         )
 
 
-@router_board.post("", status_code=status.HTTP_201_CREATED)
-def create_widget_data(
-    widget: OwnedWidgetDep, session: SessionDep, body: WidgetDataCreate
-) -> WidgetDataRead:
+def require_stores_rows(widget: WidgetInstance) -> None:
     if widget.type not in DATA_WIDGET_TYPES:
         raise HTTPException(
             status.HTTP_422_UNPROCESSABLE_CONTENT, f"A {widget.type} widget doesn't store rows"
         )
 
+
+@router_board.post("", status_code=status.HTTP_201_CREATED)
+def create_widget_data(
+    widget: OwnedWidgetDep, session: SessionDep, body: WidgetDataCreate
+) -> WidgetDataRead:
+    require_stores_rows(widget)
     require_columns(widget, body.data)
     widget_data = WidgetData(widget_instance_id=widget.id, data=body.data)
     session.add(widget_data)
     session.commit()
     session.refresh(widget_data)
     return WidgetDataRead.model_validate(widget_data)
+
+
+@router_board.post("/bulk", status_code=status.HTTP_201_CREATED)
+def create_widget_data_rows(
+    widget: OwnedWidgetDep, session: SessionDep, body: WidgetDataBulkCreate
+) -> list[WidgetDataRead]:
+    """Adds every row or none: all are checked first, then saved in one commit."""
+    require_stores_rows(widget)
+    for index, row in enumerate(body.rows):
+        require_columns(widget, row.data, at=("body", "rows", index, "data"))
+
+    new_rows = [WidgetData(widget_instance_id=widget.id, data=row.data) for row in body.rows]
+    session.add_all(new_rows)
+    session.commit()
+    for new_row in new_rows:
+        session.refresh(new_row)
+    return [WidgetDataRead.model_validate(new_row) for new_row in new_rows]
 
 
 @router_widget.patch("/{row_id}")

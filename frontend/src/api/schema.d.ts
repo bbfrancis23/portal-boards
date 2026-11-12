@@ -215,6 +215,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/boards/{board_id}/widgets/{widget_id}/data/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Widget Data Rows
+         * @description Adds every row or none: all are checked first, then saved in one commit.
+         */
+        post: operations["create_widget_data_rows_api_boards__board_id__widgets__widget_id__data_bulk_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/widgets/{widget_id}/data": {
         parameters: {
             query?: never;
@@ -538,6 +558,11 @@ export interface components {
             config?: {
                 [key: string]: unknown;
             };
+        };
+        /** WidgetDataBulkCreate */
+        WidgetDataBulkCreate: {
+            /** Rows */
+            rows: components["schemas"]["WidgetDataCreate"][];
         };
         /** WidgetDataCreate */
         WidgetDataCreate: {
@@ -1260,6 +1285,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WidgetDataRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_widget_data_rows_api_boards__board_id__widgets__widget_id__data_bulk_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                board_id: number;
+                widget_id: number;
+            };
+            cookie?: {
+                pb_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WidgetDataBulkCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetDataRead"][];
                 };
             };
             /** @description Validation Error */
