@@ -1,37 +1,14 @@
+import {PortalCard, PortalCardSkeleton} from "@/App/Portals/PortalCard"
 import EditPortalModal from "@/components/modals/portal/EditPortalModal"
 import NewPortalModal from "@/components/modals/portal/NewPortalModal"
 import {usePortals} from "@/hooks/portal/usePortals"
 import {useCurrentUser} from "@/hooks/useCurrentUser"
 import {useSetDefaultPortal} from "@/hooks/users/useSetDefaultPortal"
 import {useTemplates} from "@/hooks/useTemplates"
-import {
-  ActionIcon,
-  AspectRatio,
-  Card,
-  Grid,
-  Group,
-  Image,
-  Skeleton,
-  Stack,
-  Text,
-  Title,
-  Tooltip,
-} from "@mantine/core"
+import {ActionIcon, Grid, Group, Stack, Text, Title} from "@mantine/core"
 import {useDisclosure} from "@mantine/hooks"
-import {
-  IconPhotoCircle as PortalIcon,
-  IconPhotoCirclePlus as AddPortalIcon,
-  IconEdit,
-  IconHome,
-} from "@tabler/icons-react"
+import {IconPhotoCirclePlus as AddPortalIcon} from "@tabler/icons-react"
 import {useState} from "react"
-import {Link} from "react-router"
-
-// Every card (and its loading skeleton) has the same shape, so rows line up whatever the text:
-// the template picture at its own proportions (so none of it is cropped), the name on one line,
-// and the description always taking two lines ("…" if longer, blank space if shorter).
-const IMAGE_RATIO = 320 / 180 // the template SVGs are 320×180
-const DESCRIPTION_HEIGHT = "3.1em" // two lines of text (line height 1.55)
 
 const Portals = () => {
   const {data: portals, isPending: isPendingPortals} = usePortals()
@@ -41,10 +18,9 @@ const Portals = () => {
   const [opened, modal] = useDisclosure(false)
   const [editOpened, editModal] = useDisclosure(false)
   const [portalId, setPortalId] = useState<number | null>(null)
+  const editingPortal = portals?.find((p) => p.id === portalId)
   // Same rule as log-in: the chosen home, or the first portal when none is chosen (or it was deleted).
   const homePortal = user?.default_portal_id ?? portals?.[0]?.id
-  const homeLabel = (portalId: number) =>
-    portalId === homePortal ? "This is your home portal" : "Make this your home portal"
 
   const handleOpenEditPortalModal = (portalId: number) => {
     setPortalId(portalId)
@@ -68,21 +44,7 @@ const Portals = () => {
         <Grid gap="md" rowGap="xl" columnGap="sm">
           {(isPendingPortals || isPendingTemplates) && (
             <Grid.Col span={{base: 12, sm: 6, md: 4}}>
-              <Card shadow="sm" padding="lg" withBorder>
-                <Card.Section>
-                  <AspectRatio ratio={IMAGE_RATIO}>
-                    <Skeleton radius={0} />
-                  </AspectRatio>
-                </Card.Section>
-                <Group mt="md" mb="xs">
-                  <Skeleton height={22} circle />
-                  <Skeleton height={10} width="40%" radius="xl" />
-                </Group>
-                <Stack gap={8} mih={DESCRIPTION_HEIGHT}>
-                  <Skeleton height={8} radius="xl" />
-                  <Skeleton height={8} width="60%" radius="xl" />
-                </Stack>
-              </Card>
+              <PortalCardSkeleton />
             </Grid.Col>
           )}
 
@@ -93,70 +55,29 @@ const Portals = () => {
           )}
           {portals?.map((portal) => (
             <Grid.Col span={{base: 12, sm: 6, md: 4}} key={portal.id}>
-              <Card
-                shadow="sm"
-                padding="lg"
-                withBorder
-                component={Link}
-                to={`/portals/${portal.id}`}>
-                <Card.Section pos="relative">
-                  <AspectRatio ratio={IMAGE_RATIO}>
-                    <Image src={`/images/templates/${portal.template_id ?? "custom"}.svg`} alt="" />
-                  </AspectRatio>
-
-                  <Tooltip label={homeLabel(portal.id)}>
-                    <ActionIcon
-                      variant={portal.id === homePortal ? "light" : "subtle"}
-                      color={portal.id === homePortal ? "amber" : undefined}
-                      aria-label={homeLabel(portal.id)}
-                      pos="absolute"
-                      top={8}
-                      left={8}
-                      loading={
-                        setDefaultPortal.isPending &&
-                        setDefaultPortal.variables?.portalId === portal.id
-                      }
-                      onClick={(event) => {
-                        // The card is a link; this button shouldn't open the portal.
-                        event.preventDefault()
-                        if (portal.id !== homePortal) setDefaultPortal.mutate({portalId: portal.id})
-                      }}>
-                      <IconHome style={{width: "70%", height: "70%"}} />
-                    </ActionIcon>
-                  </Tooltip>
-                  <ActionIcon
-                    variant="filled"
-                    aria-label="Portal options"
-                    pos="absolute"
-                    top={8}
-                    right={8}
-                    onClick={(event) => {
-                      event.preventDefault()
-                      handleOpenEditPortalModal(portal.id)
-                    }}>
-                    <IconEdit style={{width: "70%", height: "70%"}} />
-                  </ActionIcon>
-                </Card.Section>
-                <Group mt="md" mb="xs" wrap="nowrap">
-                  <PortalIcon />
-                  <Text fw={500} truncate>
-                    {portal.name}
-                  </Text>
-                </Group>
-                <Text size="sm" c="dimmed" lineClamp={2} mih={DESCRIPTION_HEIGHT}>
-                  {templates?.find((t) => t.id === portal.template_id)?.description}
-                </Text>
-              </Card>
+              <PortalCard
+                portal={portal}
+                description={
+                  portal.description ??
+                  templates?.find((t) => t.id === portal.template_id)?.description
+                }
+                isHome={portal.id === homePortal}
+                isSettingHome={
+                  setDefaultPortal.isPending && setDefaultPortal.variables?.portalId === portal.id
+                }
+                onMakeHome={() => setDefaultPortal.mutate({portalId: portal.id})}
+                onEdit={() => handleOpenEditPortalModal(portal.id)}
+              />
             </Grid.Col>
           ))}
         </Grid>
       </Stack>
       <NewPortalModal opened={opened} onClose={modal.close} />
       {portalId && (
-        // The name is part of the key: after a rename the modal starts fresh, so its field (and
-        // isDirty) begin at the new name, not the one it had when it first opened.
+        // The name and description are part of the key: after an edit the modal starts fresh, so its
+        // fields (and isDirty) begin at the saved values, not the ones it had when it first opened.
         <EditPortalModal
-          key={`${portalId}-${portals?.find((p) => p.id === portalId)?.name}`}
+          key={`${portalId}-${editingPortal?.name}-${editingPortal?.description}`}
           opened={editOpened}
           onClose={editModal.close}
           portalId={portalId}

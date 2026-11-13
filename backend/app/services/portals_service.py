@@ -12,6 +12,7 @@ def create_portal(
     session: Session,
     owner_id: int,
     name: str,
+    description: str | None = None,
     template_id: str | None = None,
     with_sample_data: bool = False,
     today: date | None = None,
@@ -23,7 +24,9 @@ def create_portal(
         if template is None:
             raise ValueError(f"Unknown template: {template_id}")
 
-    portal = Portal(owner_id=owner_id, name=name, template_id=template_id)
+    portal = Portal(
+        owner_id=owner_id, name=name, description=description or None, template_id=template_id
+    )
     session.add(portal)
     session.flush()
 

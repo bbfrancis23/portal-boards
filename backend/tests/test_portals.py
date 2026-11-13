@@ -32,7 +32,7 @@ def test_blank_portal_has_no_boards(session: Session, user: User) -> None:
 
 
 def test_template_copies_boards_and_widgets(session: Session, user: User) -> None:
-    portal = create_portal(session, user.id, "Atrium", "wellness-studio", today=TODAY)
+    portal = create_portal(session, user.id, "Atrium", template_id="wellness-studio", today=TODAY)
 
     boards = session.scalars(
         select(Board).where(Board.portal_id == portal.id).order_by(Board.position)
@@ -49,7 +49,7 @@ def test_template_copies_boards_and_widgets(session: Session, user: User) -> Non
 
 
 def test_sources_point_at_widgets_in_the_same_portal(session: Session, user: User) -> None:
-    portal = create_portal(session, user.id, "Atrium", "wellness-studio", today=TODAY)
+    portal = create_portal(session, user.id, "Atrium", template_id="wellness-studio", today=TODAY)
 
     widgets = portal_widgets(session, portal)
     widget_ids = {widget.id for widget in widgets}
@@ -60,15 +60,22 @@ def test_sources_point_at_widgets_in_the_same_portal(session: Session, user: Use
 
 
 def test_sample_data_is_copied_when_requested(session: Session, user: User) -> None:
-    create_portal(session, user.id, "Atrium", "wellness-studio", with_sample_data=True, today=TODAY)
+    create_portal(
+        session,
+        user.id,
+        "Atrium",
+        template_id="wellness-studio",
+        with_sample_data=True,
+        today=TODAY,
+    )
 
     expected = sum(len(rows) for rows in generate_sample_data(TODAY).values())
     assert session.scalar(select(func.count()).select_from(WidgetData)) == expected
 
 
 def test_portals_from_the_same_template_are_independent(session: Session, user: User) -> None:
-    first = create_portal(session, user.id, "First", "wellness-studio", today=TODAY)
-    second = create_portal(session, user.id, "Second", "wellness-studio", today=TODAY)
+    first = create_portal(session, user.id, "First", template_id="wellness-studio", today=TODAY)
+    second = create_portal(session, user.id, "Second", template_id="wellness-studio", today=TODAY)
 
     first_ids = {widget.id for widget in portal_widgets(session, first)}
     second_ids = {widget.id for widget in portal_widgets(session, second)}
@@ -82,7 +89,7 @@ def test_portals_from_the_same_template_are_independent(session: Session, user: 
 
 def test_unknown_template_is_rejected(session: Session, user: User) -> None:
     with pytest.raises(ValueError):
-        create_portal(session, user.id, "Nope", "no-such-template")
+        create_portal(session, user.id, "Nope", template_id="no-such-template")
 
     assert session.scalars(select(Portal)).all() == []
 
@@ -132,7 +139,7 @@ def test_sample_rows_fill_every_required_column(template: Template) -> None:
 
 
 def test_template_widgets_keep_their_template_key(session: Session, user: User) -> None:
-    portal = create_portal(session, user.id, "Atrium", "wellness-studio", today=TODAY)
+    portal = create_portal(session, user.id, "Atrium", template_id="wellness-studio", today=TODAY)
 
     template = TEMPLATES["wellness-studio"]
     template_keys = [spec.key for board in template.boards for spec in board.widgets]

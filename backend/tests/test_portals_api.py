@@ -71,10 +71,85 @@ def test_rename_portal(client: TestClient) -> None:
     assert response.json()["name"] == "Atrium Downtown"
 
 
+def test_create_portal_with_description(client: TestClient) -> None:
+    response = client.post(
+        "/api/portals", json={"name": "Atrium", "description": "Our downtown location"}
+    )
+
+    assert response.status_code == 201
+    assert response.json()["description"] == "Our downtown location"
+
+
+def test_portal_from_template_starts_with_no_description(client: TestClient) -> None:
+    response = client.post(
+        "/api/portals", json={"name": "Atrium", "template_id": "wellness-studio"}
+    )
+
+    assert response.json()["description"] is None
+
+
+def test_update_portal_description(client: TestClient) -> None:
+    portal_id = client.post("/api/portals", json={"name": "Atrium"}).json()["id"]
+
+    response = client.patch(
+        f"/api/portals/{portal_id}", json={"name": "Atrium", "description": "Our downtown location"}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["description"] == "Our downtown location"
+
+
+def test_empty_description_clears_it(client: TestClient) -> None:
+    portal_id = client.post(
+        "/api/portals", json={"name": "Atrium", "description": "Our downtown location"}
+    ).json()["id"]
+
+    response = client.patch(f"/api/portals/{portal_id}", json={"name": "Atrium", "description": ""})
+
+    assert response.json()["description"] is None
+
+
+def test_spaces_only_description_is_saved_as_none(client: TestClient) -> None:
+    created = client.post("/api/portals", json={"name": "Atrium", "description": "   "}).json()
+    updated = client.patch(
+        f"/api/portals/{created['id']}", json={"name": "Atrium", "description": "   "}
+    ).json()
+
+    assert created["description"] is None
+    assert updated["description"] is None
+
+
+def test_spaces_only_name_is_422(client: TestClient) -> None:
+    assert client.post("/api/portals", json={"name": "   "}).status_code == 422
+
+
+def test_rename_keeps_description(client: TestClient) -> None:
+    portal_id = client.post(
+        "/api/portals", json={"name": "Atrium", "description": "Our downtown location"}
+    ).json()["id"]
+
+    response = client.patch(f"/api/portals/{portal_id}", json={"name": "Atrium Downtown"})
+
+    assert response.json()["description"] == "Our downtown location"
+
+
+def test_portal_name_and_description_over_limit_are_422(client: TestClient) -> None:
+    portal_id = client.post("/api/portals", json={"name": "Atrium"}).json()["id"]
+    long_name = {"name": "x" * 101}
+    long_description = {"name": "Atrium", "description": "x" * 201}
+
+    assert client.post("/api/portals", json=long_name).status_code == 422
+    assert client.post("/api/portals", json=long_description).status_code == 422
+    assert client.patch(f"/api/portals/{portal_id}", json=long_name).status_code == 422
+    assert client.patch(f"/api/portals/{portal_id}", json=long_description).status_code == 422
+
+
 def test_delete_portal_deletes_boards_widgets_and_data(
     client: TestClient, session: Session, dev_user: User
 ) -> None:
-    portal = create_portal(session, dev_user.id, "Atrium", "wellness-studio", with_sample_data=True)
+    portal = create_portal(
+        session, dev_user.id, "Atrium", template_id="wellness-studio", with_sample_data=True
+    )
     assert count(session, WidgetData) > 0
 
     response = client.delete(f"/api/portals/{portal.id}")

@@ -5,10 +5,18 @@ import {api} from "@/api/client"
 export const useEditPortal = () => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({portalId, name}: {portalId: number; name: string}): Promise<Portal> => {
+    mutationFn: async ({
+      portalId,
+      name,
+      description,
+    }: {
+      portalId: number
+      name: string
+      description?: string
+    }): Promise<Portal> => {
       const {data, response} = await api.PATCH("/api/portals/{portal_id}", {
         params: {path: {portal_id: portalId}},
-        body: {name},
+        body: {name, description},
       })
       if (!data) throw new Error(`Couldn't update the portal (${response.status})`)
       return data

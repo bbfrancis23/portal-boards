@@ -309,7 +309,9 @@ def test_layout_rejects_a_widget_from_another_board(client: TestClient) -> None:
 def test_delete_removes_the_widget_and_its_data(
     client: TestClient, session: Session, dev_user: User
 ) -> None:
-    create_portal(session, dev_user.id, "Atrium", "wellness-studio", with_sample_data=True)
+    create_portal(
+        session, dev_user.id, "Atrium", template_id="wellness-studio", with_sample_data=True
+    )
     row = session.scalars(select(WidgetData)).first()
     assert row is not None
     widget = session.get(WidgetInstance, row.widget_instance_id)
@@ -419,7 +421,7 @@ def test_missing_board_or_widget_is_404(client: TestClient) -> None:
 def test_other_users_widgets_are_protected(
     client: TestClient, session: Session, other_user: User
 ) -> None:
-    theirs = create_portal(session, other_user.id, "Theirs", "wellness-studio")
+    theirs = create_portal(session, other_user.id, "Theirs", template_id="wellness-studio")
     their_board = session.scalar(select(Board).where(Board.portal_id == theirs.id))
     assert their_board is not None
     their_widget = session.scalar(
@@ -508,7 +510,7 @@ def test_a_blank_portal_has_no_presets(client: TestClient) -> None:
 def test_other_users_presets_are_404(
     client: TestClient, session: Session, other_user: User
 ) -> None:
-    theirs = create_portal(session, other_user.id, "Theirs", "wellness-studio")
+    theirs = create_portal(session, other_user.id, "Theirs", template_id="wellness-studio")
     their_board = session.scalar(select(Board).where(Board.portal_id == theirs.id))
     assert their_board is not None
 

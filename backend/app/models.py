@@ -93,6 +93,7 @@ class Portal(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     name: Mapped[str]
+    description: Mapped[str | None]
     # The template this portal was copied from, e.g. "wellness-studio" (None for a blank portal).
     template_id: Mapped[str | None]
     created_at: Mapped[datetime] = mapped_column(default=utcnow)

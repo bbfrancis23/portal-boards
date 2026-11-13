@@ -7,7 +7,7 @@ from app.services.portals_service import create_portal
 
 
 def widget_with_rows(session: Session, owner: User) -> WidgetInstance:
-    create_portal(session, owner.id, "Atrium", "wellness-studio", with_sample_data=True)
+    create_portal(session, owner.id, "Atrium", template_id="wellness-studio", with_sample_data=True)
     row = session.scalars(select(WidgetData)).first()
     assert row is not None
     widget = session.get(WidgetInstance, row.widget_instance_id)
