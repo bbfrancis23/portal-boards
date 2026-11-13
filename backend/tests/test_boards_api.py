@@ -57,7 +57,9 @@ def test_update_board_changes_only_what_was_sent(client: TestClient) -> None:
 def test_delete_board_deletes_its_widgets_and_data(
     client: TestClient, session: Session, dev_user: User
 ) -> None:
-    portal = create_portal(session, dev_user.id, "Atrium", "wellness-studio", with_sample_data=True)
+    portal = create_portal(
+        session, dev_user.id, "Atrium", template_id="wellness-studio", with_sample_data=True
+    )
     members = session.scalar(
         select(Board).where(Board.portal_id == portal.id, Board.label == "Members")
     )
@@ -83,7 +85,7 @@ def test_missing_portal_or_board_is_404(client: TestClient) -> None:
 def test_other_users_boards_are_hidden_and_protected(
     client: TestClient, session: Session, other_user: User
 ) -> None:
-    theirs = create_portal(session, other_user.id, "Theirs", "wellness-studio")
+    theirs = create_portal(session, other_user.id, "Theirs", template_id="wellness-studio")
     their_board = session.scalar(select(Board).where(Board.portal_id == theirs.id))
     assert their_board is not None
 

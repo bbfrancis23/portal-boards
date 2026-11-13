@@ -20,7 +20,13 @@ def list_portals(session: SessionDep, user: CurrentUserDep) -> list[PortalRead]:
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_portal(session: SessionDep, user: CurrentUserDep, data: PortalCreate) -> PortalRead:
     try:
-        portal = portals_service.create_portal(session, user.id, data.name, data.template_id)
+        portal = portals_service.create_portal(
+            session,
+            user.id,
+            data.name,
+            template_id=data.template_id,
+            description=data.description,
+        )
     except ValueError as error:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(error)) from error
     return PortalRead.model_validate(portal)
@@ -32,6 +38,8 @@ def update_portal(
 ) -> PortalRead:
     portal = get_owned_portal(session, user, portal_id)
     portal.name = data.name
+    if data.description is not None:
+        portal.description = data.description or None
     session.commit()
     session.refresh(portal)
     return PortalRead.model_validate(portal)

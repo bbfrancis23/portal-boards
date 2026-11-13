@@ -482,6 +482,8 @@ export interface components {
         PortalCreate: {
             /** Name */
             name: string;
+            /** Description */
+            description?: string | null;
             /** Template Id */
             template_id?: string | null;
         };
@@ -491,6 +493,8 @@ export interface components {
             id: number;
             /** Name */
             name: string;
+            /** Description */
+            description: string | null;
             /** Template Id */
             template_id: string | null;
             /**
@@ -503,6 +507,8 @@ export interface components {
         PortalUpdate: {
             /** Name */
             name: string;
+            /** Description */
+            description?: string | null;
         };
         /** TemplateRead */
         TemplateRead: {

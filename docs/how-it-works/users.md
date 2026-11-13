@@ -57,7 +57,7 @@ flowchart TD
 flowchart LR
     subgraph Portals["Portals page"]
         PNew["Create a portal"]
-        PEdit["Rename a portal"]
+        PEdit["Rename a portal or change its description<br/>(none shows the template's)"]
         PDel["Delete a portal<br/>(removes everything in it)"]
     end
     subgraph Boards["Inside a portal"]

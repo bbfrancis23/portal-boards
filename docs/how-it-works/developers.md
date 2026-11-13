@@ -105,6 +105,7 @@ erDiagram
         int id
         int owner_id
         string name
+        string description "null = show the template's"
         string template_id "wellness-studio | null"
     }
     Board {
